@@ -1517,14 +1517,24 @@ class HaCustomTimerCard extends LitElement {
       totalDurationSec = this._parseDurationToSeconds(stateObj.attributes.duration) || 3600;
 
       if (state === "active" && stateObj.attributes.finishes_at) {
-        // 서버-클라이언트 시간 오차(Time Skew) 보정: 남은 시간은 설정된 시간을 초과할 수 없음
         let calcSec = Math.floor((new Date(stateObj.attributes.finishes_at).getTime() - this._now) / 1000);
-        remainingSec = Math.min(totalDurationSec, Math.max(0, calcSec));
+        
+        // 동적 오차 보정: 클라이언트 시간이 느려 calcSec가 기준시간을 초과하면 오차(offset)를 고정 저장
+        if (this._timeOffset === undefined || this._lastTimerState !== "active") {
+          this._timeOffset = Math.max(0, calcSec - totalDurationSec);
+        }
+        
+        // 오차를 빼서 0까지 정확히 떨어지도록 맞춤
+        remainingSec = Math.max(0, calcSec - (this._timeOffset || 0));
+        remainingSec = Math.min(totalDurationSec, remainingSec);
       } else if (state === "paused" && stateObj.attributes.remaining) {
         remainingSec = this._parseDurationToSeconds(stateObj.attributes.remaining);
+        this._timeOffset = undefined;
       } else if (state === "idle") {
         remainingSec = 0;
+        this._timeOffset = undefined;
       }
+      this._lastTimerState = state;
     } else if (isDummy) {
       state = "idle";
       this._inputHours = 0;
