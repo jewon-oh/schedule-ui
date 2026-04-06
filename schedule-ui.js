@@ -1877,28 +1877,69 @@ class HaCustomTimerCardEditor extends LitElement {
       const entityState = this.hass.states[targetEntityId];
       const entityName = entityState?.attributes?.friendly_name || targetEntityId;
       
-      // HA 엔티티 ID 규격(영어 소문자/숫자/_ 만 허용)을 엄격히 맞추기 위한 안전 변환 및 고유 해시 조합
-      const safeAscii = targetEntityId.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      const hash = Math.abs(targetEntityId.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16);
-      const safeSuffix = `${safeAscii}_${hash}`;
-      
-      const timerEntityId = `timer.${safeSuffix}`;
-      
-      // Step A: Timer 헬퍼 생성 (REST API 사용 - Schedule처럼 완벽히 자동 생성되도록 지원)
+      let timerId = null;
+      let timerEntityId = null;
+
+      // Step A: Timer 헬퍼 생성 (Schedule처럼 내부 WS API 활용)
       try {
         const payload = {
+          type: "config/timer/create",
           name: `${entityName} 타이머`,
           icon: "mdi:timer-sand"
         };
-        await this.hass.callApi("POST", `config/timer/config/${safeSuffix}`, payload);
+        const timerResult = await this.hass.callWS(payload);
+        timerId = timerResult.id;
+        timerEntityId = `timer.${timerId}`;
         console.log("[schedule-ui] timer helper create SUCCESS:", timerEntityId);
       } catch (e) {
-        console.warn("Timer helper auto-creation failed. Error:", e);
-        this._creationError = `(안내) 타이머 헬퍼 자동 생성에 실패했습니다. HA 설정 > 헬퍼에서 '${timerEntityId}'를 직접 생성해주세요. (자동화 브릿지는 정상 연결됩니다)`;
+        console.warn("Timer helper auto-creation failed via config/timer/create. Error:", e);
+        this._creationError = `(안내) 타이머 헬퍼 생성 실패. 해당 HA 버전에서는 플러그인이 헬퍼를 완전 자동 생성할 수 없습니다. 수동 구성 권장.`;
+        this._isLoading = false;
+        return;
       }
 
-      // Step B: 자동화 브릿지 생성
-      await this._createAutomationBridge(timerEntityId, targetEntityId, this._selectedAction, entityName);
+      // Step B: 자동화 브릿지 생성 (생성된 timerId를 기반으로 Bridge ID 부여)
+      const actionType = this._selectedAction || "turn_off";
+      const bridgeId = `timer_bridge_${timerId}`;
+      const alias = `[Timer Bridge] ${entityName}`;
+      
+      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
+
+      // (브릿지 중복 제거 로직은 필요시 추가하거나, 새로운 브릿지로 안전하게 덮어쓰기)
+      try {
+        const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
+        const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
+        if (existing) {
+          await this.hass.callWS({ type: "config/entity_registry/remove", entity_id: existing.entity_id });
+        }
+      } catch(e) {}
+
+      const bridgePayload = {
+        id: bridgeId,
+        alias: alias,
+        description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
+        mode: "single",
+        trigger: [
+          {
+            platform: "event",
+            event_type: "timer.finished",
+            event_data: {
+              entity_id: timerEntityId
+            }
+          }
+        ],
+        action: [
+          {
+            service: `homeassistant.${actionType}`,
+            target: {
+              entity_id: targetEntityId
+            }
+          }
+        ]
+      };
+
+      await this.hass.callApi("POST", `config/automation/config/${bridgeId}`, bridgePayload);
+      console.log("[schedule-ui] timer automation bridge create SUCCESS:", bridgeId);
 
       // 설정 임시 업데이트
       this._config = {
