@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HA Custom Timer Card Preview</title>
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      --primary-color: #03a9f4;
+      --card-background-color: rgba(255,255,255,0.05);
+      --divider-color: rgba(255,255,255,0.1);
+      --primary-text-color: #ffffff;
+      --secondary-text-color: #a0a0a0;
+      --error-color: #f44336;
+      --custom-background: #1e1e1e;
+      --custom-border: rgba(255, 255, 255, 0.1);
+      --custom-primary: #03a9f4;
+      --custom-hover: rgba(3, 169, 244, 0.1);
+    }
+
+    #preview-container {
+      width: 100%;
+      max-width: 500px;
+      margin-top: 40px;
+      padding: 20px;
+    }
+
+    .toolbar {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    ha-icon { display: inline-block; width: 24px; height: 24px; }
+  </style>
+  <script type="module" src="./timer-ui.js"></script>
+</head>
+<body>
+  <div id="preview-container">
+    <div class="toolbar">
+      <span>Mock HA Environment - Timer</span>
+      <select id="langSwitch" onchange="switchLang(this.value)">
+        <option value="ko">한국어 (KO)</option>
+        <option value="en">English (EN)</option>
+      </select>
+    </div>
+    
+    <!-- Render Card Here -->
+    <ha-custom-timer-card id="myCard"></ha-custom-timer-card>
+  </div>
+
+  <script>
+    class HaIcon extends HTMLElement {
+      connectedCallback() {
+        const icon = this.getAttribute('icon');
+        let emoji = '⚙️';
+        if (icon.includes('play')) emoji = '▶️';
+        if (icon.includes('pause')) emoji = '⏸️';
+        if (icon.includes('stop')) emoji = '⏹️';
+        if (icon.includes('timer')) emoji = '⏳';
+        
+        this.innerHTML = `<span style="font-size: 1.2rem; cursor: pointer;">${emoji}</span>`;
+      }
+    }
+    customElements.define('ha-icon', HaIcon);
+
+    const hass = {
+      language: 'ko',
+      states: {
+        'timer.mock_timer': {
+          entity_id: 'timer.mock_timer',
+          state: 'active',
+          attributes: {
+            friendly_name: "거실 램프 타이머",
+            duration: "01:00:00",
+            finishes_at: new Date(Date.now() + 1800000).toISOString() // 30 mins remaining
+          }
+        }
+      },
+      callService: (domain, service, data) => {
+        console.log(`Mock Call Service -> ${domain}.${service}`, data);
+      }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const card = document.getElementById('myCard');
+      // For dummy preview screenshot, leave config empty:
+      card.setConfig({
+        type: "custom:ha-custom-timer-card",
+        title: "거실 전등 슬립 타이머"
+        // entity: "timer.mock_timer" // Uncomment to test active state
+      });
+      card.hass = { ...hass };
+    });
+
+    window.switchLang = function(lang) {
+      hass.language = lang;
+      document.getElementById('myCard').hass = { ...hass };
+    }
+  </script>
+</body>
+</html>

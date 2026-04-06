@@ -1,0 +1,47 @@
+blueprint:
+  name: "스마트 타이머 자동화 브릿지"
+  description: "Timer UI 전용 연동 템플릿입니다. 타이머가 끝났을 때 타겟 기기를 켜거나 끕니다."
+  domain: automation
+  input:
+    timer_helper:
+      name: 타이머 도우미 (필수)
+      description: 카드에서 제어하고 있는 타이머 엔티티를 선택하세요.
+      selector:
+        entity:
+          domain: timer
+
+    target_device:
+      name: 대상 기기 (필수)
+      description: 타이머 종료 시 실제로 제어할 기기를 선택하세요.
+      selector:
+        entity: {}
+
+    action_type:
+      name: 종료 시 동작
+      description: 타이머가 끝났을 때 어떤 동작을 할지 선택하세요.
+      default: "turn_off"
+      selector:
+        select:
+          options:
+            - label: "기기 끄기 (Turn Off)"
+              value: "turn_off"
+            - label: "기기 켜기 (Turn On)"
+              value: "turn_on"
+            - label: "상태 반전 (Toggle)"
+              value: "toggle"
+
+variables:
+  action_type: !input action_type
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_helper
+
+action:
+  - service: "homeassistant.{{ action_type }}"
+    target:
+      entity_id: !input target_device
+
+mode: single

@@ -1,0 +1,11 @@
+﻿381:           <div style="background: rgba(var(--ha-rgb-primary), 0.15); color: var(--custom-primary); padding: 8px 16px; text-align: center; font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid var(--custom-border);">
+495:       --ha-rgb-primary: var(--rgb-primary-color, 3, 169, 244);
+501:       --custom-active-bg: rgba(var(--ha-rgb-primary), 0.15);
+662:       box-shadow: 0 4px 16px rgba(var(--ha-rgb-primary), 0.35);
+668:       box-shadow: 0 6px 20px rgba(var(--ha-rgb-primary), 0.45);
+807:       box-shadow: 0 4px 12px rgba(var(--ha-rgb-primary), 0.3);
+843:       background: rgba(var(--ha-rgb-primary), 0.08);
+873:       background: linear-gradient(135deg, var(--custom-primary), rgba(var(--ha-rgb-primary), 0.6));
+881:       box-shadow: 0 0 6px rgba(var(--ha-rgb-primary), 0.5);
+996:       background: rgba(var(--ha-rgb-primary), 0.05);
+1057:       box-shadow: 0 4px 12px rgba(var(--ha-rgb-primary), 0.3);

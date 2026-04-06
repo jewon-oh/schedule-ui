@@ -385,12 +385,7 @@ class HaCustomScheduleCard extends LitElement {
 
     return html`
       <ha-card>
-        ${isDummy ? html`
-          <div style="background: rgba(3, 169, 244, 0.15); color: var(--custom-primary); padding: 8px 16px; text-align: center; font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid var(--custom-border);">
-            <ha-icon icon="mdi:eye" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
-            미리보기 모드입니다. 좌측 패널에서 연동할 기기를 골라주세요.
-          </div>
-        ` : ''}
+
         <div class="card-header">
           <div class="title-group">
             <ha-icon icon="${renderData?.icon || 'mdi:calendar-clock'}"></ha-icon>
