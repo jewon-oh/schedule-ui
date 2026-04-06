@@ -1876,7 +1876,11 @@ class HaCustomTimerCardEditor extends LitElement {
     try {
       const entityState = this.hass.states[targetEntityId];
       const entityName = entityState?.attributes?.friendly_name || targetEntityId;
-      const safeSuffix = targetEntityId.replace(".", "_");
+      
+      // HA 엔티티 ID 규격(영어 소문자/숫자/_ 만 허용)을 엄격히 맞추기 위한 안전 변환 및 고유 해시 조합
+      const safeAscii = targetEntityId.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const hash = Math.abs(targetEntityId.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16);
+      const safeSuffix = `${safeAscii}_${hash}`;
       
       const timerEntityId = `timer.${safeSuffix}`;
       
@@ -1920,10 +1924,17 @@ class HaCustomTimerCardEditor extends LitElement {
   }
 
   async _createAutomationBridge(timerEntityId, targetEntityId, actionType, entityName) {
-    const bridgeId = `timer_bridge_${targetEntityId.replace(".", "_")}`;
-    const alias = `[Timer Bridge] ${entityName}`;
+      // 동일한 safeSuffix 생성을 통해 삭제/업데이트 추적
+      const safeAscii = targetEntityId.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const hash = Math.abs(targetEntityId.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16);
+      const safeSuffix = `${safeAscii}_${hash}`;
+      
+      const bridgeId = `timer_bridge_${safeSuffix}`;
+      const alias = `[Timer Bridge] ${entityName}`;
+      
+      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
 
-    // 자동화 삭제 (기존 방식 유지)
+      // 자동화 삭제 (기존 방식 유지)
     try {
       const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
       const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
@@ -1936,6 +1947,7 @@ class HaCustomTimerCardEditor extends LitElement {
     } catch(e) {}
 
     const payload = {
+      id: bridgeId,
       alias: alias,
       description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
       mode: "single",
