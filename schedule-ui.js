@@ -229,25 +229,25 @@ class HaCustomScheduleCard extends LitElement {
 
 
   // '매일' 탭에서 7개 요일의 공통 시간 블록(교집합)을 계산하는 헬퍼
-  _getEverydayBlocks() {
-    if (!this._scheduleData) return [];
+  _getEverydayBlocks(dataObj = this._scheduleData) {
+    if (!dataObj) return [];
     // 첫 번째 요일(월요일)의 블록 목록을 기준으로 시작
-    const baseBlocks = this._scheduleData[WEEKDAYS[0]] || [];
+    const baseBlocks = dataObj[WEEKDAYS[0]] || [];
     // 기준 블록 중에서 7개 요일 모두에 존재하는 것만 필터링
     return baseBlocks.filter(block =>
       WEEKDAYS.every(day => {
-        const dayBlocks = this._scheduleData[day] || [];
+        const dayBlocks = dataObj[day] || [];
         return dayBlocks.some(b => b.from === block.from && b.to === block.to);
       })
     );
   }
 
   _deleteBlock(day, index) {
-    if (this._isEditing || !this._scheduleData) return;
+    if (this._isEditing || !this._scheduleData || !this._config?.entity) return;
 
     // '매일' 탭: 7개 요일 모두에서 해당 시간 블록을 일괄 삭제
     if (this._selectedDay === EVERYDAY_INDEX) {
-      const everydayBlocks = this._getEverydayBlocks();
+      const everydayBlocks = this._getEverydayBlocks(this._scheduleData);
       const target = everydayBlocks[index];
       if (!target) return;
 
@@ -271,7 +271,7 @@ class HaCustomScheduleCard extends LitElement {
 
   _addBlock(e) {
     e.preventDefault();
-    if (this._isEditing) return;
+    if (this._isEditing || !this._config?.entity) return;
     if (!this._scheduleData) {
       console.warn("[schedule-ui] _addBlock 차단: 스케줄 데이터가 로드되지 않았습니다.");
       return;
@@ -354,24 +354,30 @@ class HaCustomScheduleCard extends LitElement {
       `;
     }
 
-    // 엔티티가 선택되지 않은 초기 배치 상태 → 플레이스홀더 표시
+    let isDummy = false;
+    let renderData = this._scheduleData;
+
+    // 엔티티가 선택되지 않은 초기 배치 상태 → 카드 피커 피드백용 더미 데이터 노출
     if (!this._config.entity) {
-      return html`
-        <ha-card>
-          <div class="card-content" style="text-align: center; color: var(--secondary-text-color); padding: 50px 20px;">
-            <ha-icon icon="mdi:gesture-tap" style="--mdc-icon-size: 48px; opacity: 0.5; margin-bottom: 20px;"></ha-icon>
-            <h3 style="margin: 0 0 8px 0; font-weight: 500; font-size: 1.1rem; color: var(--primary-text-color);">스케줄 카드가 구성되지 않았습니다</h3>
-            <p style="font-size: 0.95rem; margin: 0; opacity: 0.8; line-height: 1.5;">좌측 설정 탭에서 직접 스케줄을 연동하거나,<br/>대상 기기를 골라 즉시 루틴을 자동 생성해 주세요.</p>
-          </div>
-        </ha-card>
-      `;
+      isDummy = true;
+      renderData = {
+        name: this._t("scheduleManager") + " (미리보기)",
+        icon: "mdi:calendar-star",
+        monday: [{from: "09:00:00", to: "18:00:00"}],
+        tuesday: [{from: "09:00:00", to: "18:00:00"}],
+        wednesday: [{from: "09:00:00", to: "18:00:00"}],
+        thursday: [{from: "09:00:00", to: "18:00:00"}],
+        friday: [{from: "09:00:00", to: "12:00:00"}, {from: "13:00:00", to: "18:00:00"}],
+        saturday: [],
+        sunday: []
+      };
     }
 
-    const customTitle = this._config.title || (this._scheduleData ? this._scheduleData.name : this._t("scheduleManager"));
+    const customTitle = this._config.title || (renderData ? renderData.name : this._t("scheduleManager"));
     const isEveryday = this._selectedDay === EVERYDAY_INDEX;
     const dayStr = isEveryday ? null : WEEKDAYS[this._selectedDay];
-    const blocks = this._scheduleData
-      ? (isEveryday ? this._getEverydayBlocks() : (this._scheduleData[dayStr] || []))
+    const blocks = renderData
+      ? (isEveryday ? this._getEverydayBlocks(renderData) : (renderData[dayStr] || []))
       : [];
 
     // 시작 시간 순으로 정렬
@@ -379,9 +385,15 @@ class HaCustomScheduleCard extends LitElement {
 
     return html`
       <ha-card>
+        ${isDummy ? html`
+          <div style="background: rgba(var(--rgb-primary-color), 0.15); color: var(--custom-primary); padding: 8px 16px; text-align: center; font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid var(--custom-border);">
+            <ha-icon icon="mdi:eye" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
+            미리보기 모드입니다. 좌측 패널에서 연동할 기기를 골라주세요.
+          </div>
+        ` : ''}
         <div class="card-header">
           <div class="title-group">
-            <ha-icon icon="${this._scheduleData?.icon || 'mdi:calendar-clock'}"></ha-icon>
+            <ha-icon icon="${renderData?.icon || 'mdi:calendar-clock'}"></ha-icon>
             <h2>${customTitle}</h2>
           </div>
         </div>
