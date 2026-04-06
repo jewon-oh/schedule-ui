@@ -14,8 +14,8 @@ Home Assistant의 순정 `schedule` 및 `timer` 헬퍼를 시각적으로 단일
 * **다크 테마 최적화** — 모던한 글래스모피즘(Glassmorphism) 스타일로 설계되어 Home Assistant의 다크/라이트 테마에 모두 어울립니다.
 
 <div align="center">
-  <img src="assets/preview.png" alt="스케줄 카드 미리보기 UI" width="45%" style="margin-right: 4%;" />
-  <img src="assets/preview-timer.png" alt="타이머 카드 미리보기 UI" width="45%" />
+  <img src="https://raw.githubusercontent.com/jewon-oh/schedule-ui/master/assets/preview.png" alt="스케줄 카드 미리보기 UI" width="45%" style="margin-right: 4%;" />
+  <img src="https://raw.githubusercontent.com/jewon-oh/schedule-ui/master/assets/preview-timer.png" alt="타이머 카드 미리보기 UI" width="45%" />
 </div>
 
 ---
