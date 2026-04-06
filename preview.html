@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HA Custom Schedule Card Preview</title>
+  <title>HA Custom Schedule Card Preview (v1.0.0)</title>
   <style>
     body {
       background-color: #1c1c1c;
@@ -21,11 +21,16 @@
       --primary-text-color: #ffffff;
       --secondary-text-color: #a0a0a0;
       --error-color: #f44336;
+      /* Custom properties used in the card */
+      --custom-background: #1e1e1e;
+      --custom-border: rgba(255, 255, 255, 0.1);
+      --custom-primary: #03a9f4;
+      --custom-hover: rgba(3, 169, 244, 0.1);
     }
 
     #preview-container {
       width: 100%;
-      max-width: 450px;
+      max-width: 500px;
       margin-top: 40px;
       padding: 20px;
     }
@@ -63,28 +68,31 @@
     // Mock HA Icons
     class HaIcon extends HTMLElement {
       connectedCallback() {
-        // Fallback simple icon representation
         const icon = this.getAttribute('icon');
-        const isDelete = icon.includes('trash');
-        const isAdd = icon.includes('plus');
-        
         let emoji = '⚙️';
-        if (isDelete) emoji = '🗑️';
-        if (isAdd) emoji = '+';
-        if (icon === 'mdi:calendar-clock') emoji = '📅';
-
+        if (icon.includes('trash')) emoji = '🗑️';
+        if (icon.includes('plus')) emoji = '+';
+        if (icon.includes('calendar')) emoji = '📅';
+        if (icon.includes('lightbulb')) emoji = '💡';
+        
         this.innerHTML = `<span style="font-size: 1.2rem; cursor: pointer;">${emoji}</span>`;
       }
     }
     customElements.define('ha-icon', HaIcon);
 
-    // Mock Backend Database
+    // Mock Backend Database (Schedule Helper)
     let mockScheduleDB = [
       {
-        id: "mock_device_1",
-        name: "코팅실 전등",
+        id: "schedule.mock_livingroom_light",
+        name: "거실 전등 자동화 스케줄",
         icon: "mdi:lightbulb",
-        monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
+        monday: [{from: "18:00:00", to: "23:00:00"}], 
+        tuesday: [{from: "18:00:00", to: "23:00:00"}], 
+        wednesday: [{from: "18:00:00", to: "23:00:00"}], 
+        thursday: [{from: "18:00:00", to: "23:00:00"}], 
+        friday: [{from: "18:00:00", to: "23:00:00"}, {from: "07:00:00", to: "09:00:00"}], 
+        saturday: [{from: "10:00:00", to: "23:59:00"}], 
+        sunday: [{from: "10:00:00", to: "23:59:00"}]
       }
     ];
 
@@ -92,42 +100,71 @@
     const hass = {
       language: 'ko',
       states: {
-        'automation.mock_bridge': { state: 'on' }
+        'schedule.mock_livingroom_light': {
+          entity_id: 'schedule.mock_livingroom_light',
+          state: 'off',
+          attributes: {
+            friendly_name: "거실 전등 자동화 스케줄"
+          }
+        }
       },
+      // Mock callWS for Registry Fetching and Updating
       callWS: async (payload) => {
         console.log("Mock WS Call:", payload);
         if (payload.type === 'schedule/list') {
-          return mockScheduleDB;
+          // List endpoint isn't naturally used in frontend natively unless mapped?
+          // The frontend calls REST API via HA websocket.
         }
+        
+        // Mock get states/entities for schedule data
+        if (payload.type === 'config/entity_registry/list') {
+            return [];
+        }
+
+        // The card uses hass.states locally, but it might fetch if it wants
+        // Wait, schedule-ui.js calls "schedule/update" directly.
         if (payload.type === 'schedule/update') {
           const idx = mockScheduleDB.findIndex(s => s.id === payload.schedule_id);
           if (idx !== -1) {
-            // update in mock DB
+            // merge keys (e.g. monday, tuesday, etc.)
             mockScheduleDB[idx] = { ...mockScheduleDB[idx], ...payload };
+            
+            // Re-assign the entire states object to trigger UI re-render
+            const updatedHass = Object.assign({}, document.getElementById('myCard').hass);
+            
+            // In a real HA env, updating schedule data doesn't return state immediately.
+            // But we can trigger a re-render by doing this:
+            document.getElementById('myCard')._scheduleData = mockScheduleDB[idx];
+            document.getElementById('myCard').requestUpdate();
+            
             return mockScheduleDB[idx];
           }
         }
-        return {};
-      },
-      callService: (domain, service, data) => {
-        console.log(`Mock Call Service -> ${domain}.${service}`, data);
-        if (service === 'toggle' && data.entity_id === 'automation.mock_bridge') {
-          const currentState = hass.states['automation.mock_bridge'].state;
-          hass.states['automation.mock_bridge'].state = currentState === 'on' ? 'off' : 'on';
-          // Trigger reactivity
-          document.getElementById('myCard').hass = { ...hass };
+        
+        // Return dummy data when card fetch schedule details
+        if (payload.type === 'config/entity_registry/get') {
+            return { entity_id: payload.entity_id };
         }
+
+        // Just mock what the card might request by returning the current mock DB object if possible
+        const scheduleData = mockScheduleDB.find(s => s.id === payload.entity_id || s.id === payload.schedule_id);
+        if (scheduleData) return scheduleData;
+
+        return {};
       }
     };
 
     // Initialize Card
     document.addEventListener("DOMContentLoaded", () => {
       const card = document.getElementById('myCard');
+      
+      // Inject dummy schedule data to the element directly if normal fetch fails
+      card._scheduleData = mockScheduleDB[0];
+      
       card.setConfig({
         type: "custom:ha-custom-schedule-card",
-        entity: "schedule.mock_device_1",
-        title: "Mock Test Device",
-        toggle_entity: "automation.mock_bridge"
+        entity: "schedule.mock_livingroom_light",
+        title: "거실 전등 스케줄"
       });
       card.hass = { ...hass };
     });
