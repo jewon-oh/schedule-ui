@@ -413,7 +413,7 @@ class HaCustomScheduleCard extends LitElement {
             <!-- 주간 타임라인 -->
             <div class="weekly-timeline">
               ${WEEKDAYS.map((day, idx) => {
-                const dayBlocks = this._scheduleData ? (this._scheduleData[day] || []) : [];
+                const dayBlocks = renderData ? (renderData[day] || []) : [];
                 const isSelected = this._selectedDay === idx;
                 const MINUTES_IN_DAY = 1440;
                 return html`
