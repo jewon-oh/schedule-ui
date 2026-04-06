@@ -1478,21 +1478,31 @@ class HaCustomTimerCard extends LitElement {
     this._startTimerPreset(minutes);
   }
 
+  // 시간 값 증감 핸들러
+  _adjustTime(field, delta) {
+    const limits = { hours: { min: 0, max: 23 }, minutes: { min: 0, max: 59 }, seconds: { min: 0, max: 59 } };
+    const fieldMap = { hours: '_inputHours', minutes: '_inputMinutes', seconds: '_inputSeconds' };
+    const propName = fieldMap[field];
+    const limit = limits[field];
+    let val = (this[propName] || 0) + delta;
+    if (val < limit.min) val = limit.max;
+    if (val > limit.max) val = limit.min;
+    this[propName] = val;
+  }
+
   render() {
     if (!this._config) return html`<ha-card><div class="error">Not configured</div></ha-card>`;
 
     const isDummy = !this._config.entity;
     let state = "idle";
     let remainingSec = 0;
-    let totalDurationSec = 3600; // 1 hour dummy
+    let totalDurationSec = 3600;
     let customTitle = this._config.title || "타이머 설정";
 
     if (!isDummy && this.hass && this.hass.states[this._config.entity]) {
       const stateObj = this.hass.states[this._config.entity];
-      state = stateObj.state; // 'idle', 'active', 'paused'
+      state = stateObj.state;
       customTitle = this._config.title || stateObj.attributes.friendly_name || this._config.entity;
-
-      // Extract duration (original duration string, e.g., "0:10:00")
       totalDurationSec = this._parseDurationToSeconds(stateObj.attributes.duration) || 3600;
 
       if (state === "active" && stateObj.attributes.finishes_at) {
@@ -1503,15 +1513,18 @@ class HaCustomTimerCard extends LitElement {
         remainingSec = 0;
       }
     } else if (isDummy) {
-      // Dummy visual state
       state = "idle";
       this._inputHours = 0;
       this._inputMinutes = 30;
     }
 
-    const progressPercent = totalDurationSec > 0 
-      ? Math.max(0, Math.min(100, (remainingSec / totalDurationSec) * 100)) 
+    const progressPercent = totalDurationSec > 0
+      ? Math.max(0, Math.min(100, (remainingSec / totalDurationSec) * 100))
       : 0;
+
+    const h = Math.floor(remainingSec / 3600);
+    const m = Math.floor((remainingSec % 3600) / 60);
+    const s = Math.floor(remainingSec % 60);
 
     return html`
       <ha-card>
@@ -1520,33 +1533,49 @@ class HaCustomTimerCard extends LitElement {
             <ha-icon icon="${state === 'active' ? 'mdi:timer-sand' : 'mdi:timer'}"></ha-icon>
             <h2>${customTitle}</h2>
           </div>
+          ${state !== 'idle' ? html`
+            <span class="state-badge ${state}">${state === 'active' ? this._t('start') : this._t('pausedMessage')}</span>
+          ` : ''}
         </div>
 
         <div class="card-content">
           ${state === "idle" ? html`
-            <div class="timer-container idle">
-              <svg class="progress-ring" width="220" height="220">
-                <circle class="progress-ring-circle bg" r="100" cx="110" cy="110"></circle>
-              </svg>
-              <div class="timer-text-container">
-                <div class="time-inputs">
-                  <input type="number" min="0" max="23" .value="${this._inputHours}" @change="${e => this._inputHours = parseInt(e.target.value) || 0}"><span>h</span>
-                  <input type="number" min="0" max="59" .value="${this._inputMinutes}" @change="${e => this._inputMinutes = parseInt(e.target.value) || 0}"><span>m</span>
-                </div>
+            <!-- 대기 상태: 숫자 증감 입력 -->
+            <div class="time-spinner-row">
+              <div class="time-spinner">
+                <button class="spin-btn" @click="${() => this._adjustTime('hours', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
+                <div class="spin-value">${String(this._inputHours).padStart(2, '0')}</div>
+                <button class="spin-btn" @click="${() => this._adjustTime('hours', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
+                <div class="spin-label">시간</div>
+              </div>
+              <div class="spin-separator">:</div>
+              <div class="time-spinner">
+                <button class="spin-btn" @click="${() => this._adjustTime('minutes', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
+                <div class="spin-value">${String(this._inputMinutes).padStart(2, '0')}</div>
+                <button class="spin-btn" @click="${() => this._adjustTime('minutes', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
+                <div class="spin-label">분</div>
+              </div>
+              <div class="spin-separator">:</div>
+              <div class="time-spinner">
+                <button class="spin-btn" @click="${() => this._adjustTime('seconds', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
+                <div class="spin-value">${String(this._inputSeconds).padStart(2, '0')}</div>
+                <button class="spin-btn" @click="${() => this._adjustTime('seconds', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
+                <div class="spin-label">초</div>
               </div>
             </div>
           ` : html`
-            <div class="timer-container ${state}">
-              <!-- Circular Progress SVG -->
-              <svg class="progress-ring" width="220" height="220">
-                <circle class="progress-ring-circle bg" r="100" cx="110" cy="110"></circle>
-                <circle class="progress-ring-circle fg" r="100" cx="110" cy="110" 
-                        style="stroke-dasharray: 628.31; stroke-dashoffset: ${628.31 - (628.31 * progressPercent) / 100};"></circle>
-              </svg>
-              <div class="timer-text-container">
-                <div class="timer-remaining">${this._formatSeconds(remainingSec)}</div>
-                <div class="timer-state-label">${state === 'paused' ? this._t('pausedMessage') : ''}</div>
+            <!-- 동작/일시정지 상태: 남은 시간 표시 + 바 -->
+            <div class="timer-display">
+              <div class="timer-remaining">
+                <span class="time-digit">${String(h).padStart(2, '0')}</span>
+                <span class="time-colon">:</span>
+                <span class="time-digit">${String(m).padStart(2, '0')}</span>
+                <span class="time-colon">:</span>
+                <span class="time-digit">${String(s).padStart(2, '0')}</span>
               </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar ${state}" style="width: ${progressPercent}%;"></div>
             </div>
           `}
 
@@ -1634,6 +1663,24 @@ class HaCustomTimerCard extends LitElement {
       letter-spacing: 0.3px;
     }
 
+    .state-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    .state-badge.active {
+      background: var(--custom-active-bg);
+      color: var(--custom-primary);
+    }
+
+    .state-badge.paused {
+      background: rgba(255, 152, 0, 0.15);
+      color: #ff9800;
+    }
+
     .card-content {
       padding: 24px;
       display: flex;
@@ -1642,107 +1689,126 @@ class HaCustomTimerCard extends LitElement {
       gap: 20px;
     }
 
-
-
-    .time-inputs {
+    /* === 숫자 스피너 (대기 상태) === */
+    .time-spinner-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 8px 0;
     }
 
-    .time-inputs input {
-      width: 50px;
-      height: 60px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--custom-border);
-      border-radius: 12px;
-      color: var(--custom-text);
-      font-size: 2rem;
-      text-align: center;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .time-inputs input:focus {
-      border-color: var(--custom-primary);
-      box-shadow: 0 0 8px rgba(3, 169, 244, 0.3);
-    }
-    
-    .time-inputs input::-webkit-outer-spin-button,
-    .time-inputs input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    .time-inputs span {
-      font-size: 1.2rem;
-      color: var(--custom-secondary);
-      font-weight: 500;
-      margin-right: 4px;
-    }
-
-    .timer-container {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 220px;
-      height: 220px;
-    }
-
-    .progress-ring {
-      transform: rotate(-90deg);
-    }
-
-    .progress-ring-circle {
-      fill: transparent;
-      stroke-width: 6;
-      transition: stroke-dashoffset 1s linear;
-    }
-
-    .progress-ring-circle.bg {
-      stroke: rgba(255, 255, 255, 0.1);
-    }
-
-    .progress-ring-circle.fg {
-      stroke: var(--custom-primary);
-      stroke-linecap: round;
-      filter: drop-shadow(0 0 4px rgba(3, 169, 244, 0.4));
-    }
-
-    .timer-container.paused .progress-ring-circle.fg {
-      stroke: #ff9800; /* Pause orange */
-      filter: none;
-    }
-
-    .timer-text-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+    .time-spinner {
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      gap: 4px;
+    }
+
+    .spin-btn {
+      width: 48px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--custom-border);
+      border-radius: 8px;
+      color: var(--custom-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      --mdc-icon-size: 20px;
+    }
+
+    .spin-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--custom-text);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .spin-btn:active {
+      transform: scale(0.92);
+      background: rgba(3, 169, 244, 0.15);
+    }
+
+    .spin-value {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--custom-text);
+      min-width: 56px;
+      text-align: center;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .spin-label {
+      font-size: 0.7rem;
+      color: var(--custom-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .spin-separator {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--custom-secondary);
+      padding: 0 2px;
+      align-self: center;
+      margin-bottom: 24px;
+    }
+
+    /* === 타이머 표시 (동작/일시정지 상태) === */
+    .timer-display {
+      padding: 16px 0;
     }
 
     .timer-remaining {
-      font-size: 2.6rem;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .time-digit {
+      font-size: 3rem;
       font-weight: 700;
       color: var(--custom-text);
+      font-variant-numeric: tabular-nums;
       letter-spacing: 1px;
     }
 
-    .timer-state-label {
-      font-size: 0.85rem;
-      color: #ff9800;
-      font-weight: 500;
-      margin-top: 4px;
-      height: 14px;
+    .time-colon {
+      font-size: 2.4rem;
+      font-weight: 300;
+      color: var(--custom-secondary);
+      margin: 0 2px;
     }
 
+    /* === 프로그레스 바 === */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s linear;
+    }
+
+    .progress-bar.active {
+      background: linear-gradient(90deg, var(--custom-primary), #29b6f6);
+      box-shadow: 0 0 8px rgba(3, 169, 244, 0.4);
+    }
+
+    .progress-bar.paused {
+      background: #ff9800;
+      box-shadow: none;
+    }
+
+    /* === 프리셋 버튼 === */
     .presets {
       display: flex;
       gap: 12px;
@@ -1771,12 +1837,13 @@ class HaCustomTimerCard extends LitElement {
     .preset-btn:active:not(:disabled) {
       transform: scale(0.95);
     }
-    
+
     .preset-btn:disabled {
       opacity: 0.3;
       cursor: not-allowed;
     }
 
+    /* === 컨트롤 버튼 === */
     .controls {
       display: flex;
       gap: 12px;
@@ -1799,7 +1866,7 @@ class HaCustomTimerCard extends LitElement {
       gap: 8px;
       transition: all 0.2s ease;
     }
-    
+
     .btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -1901,7 +1968,7 @@ class HaCustomTimerCardEditor extends LitElement {
       // Step B: 블루프린트 참조 방식으로 자동화 브릿지 생성
       const actionType = this._selectedAction || "turn_off";
       const bridgeId = `timer_bridge_${timerId}`;
-      const alias = `[Timer Bridge] ${entityName}`;
+      const alias = `타이머 브릿지: ${entityName}`;
       
       console.log("[schedule-ui] Creating timer bridge (blueprint):", bridgeId, "for target:", targetEntityId);
 
