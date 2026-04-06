@@ -1517,7 +1517,9 @@ class HaCustomTimerCard extends LitElement {
       totalDurationSec = this._parseDurationToSeconds(stateObj.attributes.duration) || 3600;
 
       if (state === "active" && stateObj.attributes.finishes_at) {
-        remainingSec = Math.max(0, Math.floor((new Date(stateObj.attributes.finishes_at).getTime() - this._now) / 1000));
+        // 서버-클라이언트 시간 오차(Time Skew) 보정: 남은 시간은 설정된 시간을 초과할 수 없음
+        let calcSec = Math.floor((new Date(stateObj.attributes.finishes_at).getTime() - this._now) / 1000);
+        remainingSec = Math.min(totalDurationSec, Math.max(0, calcSec));
       } else if (state === "paused" && stateObj.attributes.remaining) {
         remainingSec = this._parseDurationToSeconds(stateObj.attributes.remaining);
       } else if (state === "idle") {
