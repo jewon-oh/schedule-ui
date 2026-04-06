@@ -1,0 +1,6 @@
+{
+  "name": "Custom Schedule Card",
+  "render_readme": true,
+  "filename": "schedule-ui.js",
+  "iot_class": "Local Push"
+}

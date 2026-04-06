@@ -1,0 +1,50 @@
+# ==============================================================================
+# 스케줄 브릿지 자동화 예제 (examples/automation-bridge.yaml)
+# ==============================================================================
+#
+# 이 코드를 Home Assistant의 `automations.yaml`에 복사하거나,
+# UI의 자동화 만들기에서 YAML 편집 모드로 전환 후 붙여넣기하여 사용합니다.
+#
+# 목적:
+#   schedule 엔티티가 시간 블록에 진입하여 'on' 상태가 되면 기기를 켜고,
+#   시간 블록을 벗어나 'off' 상태가 되면 기기를 끕니다.
+#
+# 참고:
+#   블루프린트(schedule-bridge-blueprint.yaml)를 사용하면
+#   여러 스케줄-기기 쌍에 대해 이 자동화를 더 간편하게 생성할 수 있습니다.
+# ==============================================================================
+
+alias: "스케줄 브릿지: [기기명 입력] 작동"
+description: "스케줄 헬퍼의 시간 블록에 따라 지정된 기기를 자동으로 켜고 끕니다."
+
+# 스케줄 헬퍼의 상태 변화를 감지
+trigger:
+  - platform: state
+    entity_id: schedule.YOUR_SCHEDULE_ENTITY_ID   # [변경] 스케줄 헬퍼 엔티티 ID
+    to: "on"
+    id: "schedule_started"
+  - platform: state
+    entity_id: schedule.YOUR_SCHEDULE_ENTITY_ID   # [변경] 위와 동일
+    to: "off"
+    id: "schedule_ended"
+
+# 시간 블록 진입/종료에 따라 기기 제어
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: schedule_started
+        sequence:
+          - service: homeassistant.turn_on         # 모든 도메인(switch, light 등) 호환
+            target:
+              entity_id: switch.YOUR_DEVICE_ENTITY_ID  # [변경] 제어할 기기 엔티티 ID
+
+      - conditions:
+          - condition: trigger
+            id: schedule_ended
+        sequence:
+          - service: homeassistant.turn_off         # 모든 도메인(switch, light 등) 호환
+            target:
+              entity_id: switch.YOUR_DEVICE_ENTITY_ID  # [변경] 제어할 기기 엔티티 ID
+
+mode: single

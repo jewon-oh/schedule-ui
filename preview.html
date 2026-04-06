@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HA Custom Schedule Card Preview</title>
+  <style>
+    body {
+      background-color: #1c1c1c;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      --primary-color: #03a9f4;
+      --card-background-color: rgba(255,255,255,0.05);
+      --divider-color: rgba(255,255,255,0.1);
+      --primary-text-color: #ffffff;
+      --secondary-text-color: #a0a0a0;
+      --error-color: #f44336;
+    }
+
+    #preview-container {
+      width: 100%;
+      max-width: 450px;
+      margin-top: 40px;
+      padding: 20px;
+    }
+
+    .toolbar {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Mock HA Icon setup */
+    ha-icon { display: inline-block; width: 24px; height: 24px; }
+  </style>
+  <script type="module" src="./schedule-ui.js"></script>
+</head>
+<body>
+  <div id="preview-container">
+    <div class="toolbar">
+      <span>Mock HA Environment</span>
+      <select id="langSwitch" onchange="switchLang(this.value)">
+        <option value="ko">한국어 (KO)</option>
+        <option value="en">English (EN)</option>
+      </select>
+    </div>
+    
+    <!-- Render Card Here -->
+    <ha-custom-schedule-card id="myCard"></ha-custom-schedule-card>
+  </div>
+
+  <script>
+    // Mock HA Icons
+    class HaIcon extends HTMLElement {
+      connectedCallback() {
+        // Fallback simple icon representation
+        const icon = this.getAttribute('icon');
+        const isDelete = icon.includes('trash');
+        const isAdd = icon.includes('plus');
+        
+        let emoji = '⚙️';
+        if (isDelete) emoji = '🗑️';
+        if (isAdd) emoji = '+';
+        if (icon === 'mdi:calendar-clock') emoji = '📅';
+
+        this.innerHTML = `<span style="font-size: 1.2rem; cursor: pointer;">${emoji}</span>`;
+      }
+    }
+    customElements.define('ha-icon', HaIcon);
+
+    // Mock Backend Database
+    let mockScheduleDB = [
+      {
+        id: "mock_device_1",
+        name: "코팅실 전등",
+        icon: "mdi:lightbulb",
+        monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
+      }
+    ];
+
+    // Mock HASS Object
+    const hass = {
+      language: 'ko',
+      states: {
+        'automation.mock_bridge': { state: 'on' }
+      },
+      callWS: async (payload) => {
+        console.log("Mock WS Call:", payload);
+        if (payload.type === 'schedule/list') {
+          return mockScheduleDB;
+        }
+        if (payload.type === 'schedule/update') {
+          const idx = mockScheduleDB.findIndex(s => s.id === payload.schedule_id);
+          if (idx !== -1) {
+            // update in mock DB
+            mockScheduleDB[idx] = { ...mockScheduleDB[idx], ...payload };
+            return mockScheduleDB[idx];
+          }
+        }
+        return {};
+      },
+      callService: (domain, service, data) => {
+        console.log(`Mock Call Service -> ${domain}.${service}`, data);
+        if (service === 'toggle' && data.entity_id === 'automation.mock_bridge') {
+          const currentState = hass.states['automation.mock_bridge'].state;
+          hass.states['automation.mock_bridge'].state = currentState === 'on' ? 'off' : 'on';
+          // Trigger reactivity
+          document.getElementById('myCard').hass = { ...hass };
+        }
+      }
+    };
+
+    // Initialize Card
+    document.addEventListener("DOMContentLoaded", () => {
+      const card = document.getElementById('myCard');
+      card.setConfig({
+        type: "custom:ha-custom-schedule-card",
+        entity: "schedule.mock_device_1",
+        title: "Mock Test Device",
+        toggle_entity: "automation.mock_bridge"
+      });
+      card.hass = { ...hass };
+    });
+
+    // Handle Language Switching
+    window.switchLang = function(lang) {
+      hass.language = lang;
+      document.getElementById('myCard').hass = { ...hass };
+    }
+  </script>
+</body>
+</html>

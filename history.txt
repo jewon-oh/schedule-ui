@@ -1,0 +1,15 @@
+﻿c84269b chore: 마법사 타이틀에 웹 브라우저 캐시 식별용 버전 표기 추가 (v3.0.5)
+e4b43ad fix(api): schedule/create 호출 시 validation 에러 수정
+8f71bf0 feat: 마법사 UI 커스텀 카드 영역 외부로 방출 후 Editor Panel로 내재화
+82f1160 fix: 마법사 UI 대상 기기 선택기 렌더링 불량 (Native Select로 교체)
+9b7ffe5 fix: 마법사 UI 대상 기기 렌더링 누락 및 카드 크기 관련 버그 픽스
+6498668 fix: 에디터에서 엔티티 피커(ha-entity-picker)가 보이지 않던 문제 최종 해결
+dbe9c14 fix: 에디터에서 기기(엔티티) 선택기 렌더링 안되는 버그 수정
+ad75e43 feat: 마법사 UI 자동화UX 개선 (클릭리스 루틴생성)
+a5c6822 fix: 카드 피커 프리뷰 무한 로딩 해결 (window.customCards 설정 오류 수정)
+c6f3465 fix: 카드 피커의 무한 로딩 스피너 근본 원인 해결
+36151b2 fix: 카드 피커 프리뷰 스피너 해결
+3fe3715 fix: 카드 피커 스피너 문제 해결
+d66069c feat: 루틴 자동 생성 마법사 (v3.0.0)
+3f9471f refactor: 토글 버튼 및 관련 코드 전면 제거
+91a1269 feat: schedule 엔티티 entity registry 기반 활성/비활성 토글 (v2.2.0)
