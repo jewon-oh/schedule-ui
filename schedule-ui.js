@@ -1376,8 +1376,6 @@ const EN_TRANSLATION = {
 // ==========================================
 // Main Card
 // ==========================================
-
-
 class HaCustomTimerCard extends LitElement {
   static properties = {
     hass: { type: Object },
