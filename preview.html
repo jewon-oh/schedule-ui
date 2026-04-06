@@ -159,12 +159,10 @@
       const card = document.getElementById('myCard');
       
       // Inject dummy schedule data to the element directly if normal fetch fails
-      card._scheduleData = mockScheduleDB[0];
+      // card._scheduleData = mockScheduleDB[0];
       
       card.setConfig({
-        type: "custom:ha-custom-schedule-card",
-        entity: "schedule.mock_livingroom_light",
-        title: "거실 전등 스케줄"
+        type: "custom:ha-custom-schedule-card"
       });
       card.hass = { ...hass };
     });

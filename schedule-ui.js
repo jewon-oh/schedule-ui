@@ -386,7 +386,7 @@ class HaCustomScheduleCard extends LitElement {
     return html`
       <ha-card>
         ${isDummy ? html`
-          <div style="background: rgba(var(--rgb-primary-color), 0.15); color: var(--custom-primary); padding: 8px 16px; text-align: center; font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid var(--custom-border);">
+          <div style="background: rgba(3, 169, 244, 0.15); color: var(--custom-primary); padding: 8px 16px; text-align: center; font-size: 0.85rem; font-weight: 500; border-bottom: 1px solid var(--custom-border);">
             <ha-icon icon="mdi:eye" style="--mdc-icon-size: 16px; margin-right: 4px;"></ha-icon>
             미리보기 모드입니다. 좌측 패널에서 연동할 기기를 골라주세요.
           </div>
@@ -505,7 +505,7 @@ class HaCustomScheduleCard extends LitElement {
       --custom-text: var(--primary-text-color, #ffffff);
       --custom-secondary: var(--secondary-text-color, #a0a0a0);
       --custom-danger: var(--error-color, #f44336);
-      --custom-active-bg: rgba(var(--rgb-primary-color), 0.15);
+      --custom-active-bg: rgba(3, 169, 244, 0.15);
       --custom-success: #4caf50;
     }
 
@@ -666,13 +666,13 @@ class HaCustomScheduleCard extends LitElement {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 16px rgba(var(--rgb-primary-color), 0.35);
+      box-shadow: 0 4px 16px rgba(3, 169, 244, 0.35);
       transition: all 0.2s ease;
     }
 
     .create-btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(var(--rgb-primary-color), 0.45);
+      box-shadow: 0 6px 20px rgba(3, 169, 244, 0.45);
     }
 
     .create-btn:active:not(:disabled) {
@@ -811,7 +811,7 @@ class HaCustomScheduleCard extends LitElement {
       background: var(--custom-primary);
       color: var(--text-primary-color, #fff);
       border-color: var(--custom-primary);
-      box-shadow: 0 4px 12px rgba(var(--rgb-primary-color), 0.3);
+      box-shadow: 0 4px 12px rgba(3, 169, 244, 0.3);
       transform: translateY(-2px);
     }
 
@@ -847,7 +847,7 @@ class HaCustomScheduleCard extends LitElement {
     }
 
     .weekly-row.selected {
-      background: rgba(var(--rgb-primary-color), 0.08);
+      background: rgba(3, 169, 244, 0.08);
     }
 
     .weekly-row.selected .weekly-day-label {
@@ -877,7 +877,7 @@ class HaCustomScheduleCard extends LitElement {
       position: absolute;
       top: 2px;
       bottom: 2px;
-      background: linear-gradient(135deg, var(--custom-primary), rgba(var(--rgb-primary-color), 0.6));
+      background: linear-gradient(135deg, var(--custom-primary), rgba(3, 169, 244, 0.6));
       border-radius: 3px;
       min-width: 2px;
       transition: opacity 0.2s ease;
@@ -885,7 +885,7 @@ class HaCustomScheduleCard extends LitElement {
 
     .timeline-block:hover {
       opacity: 0.8;
-      box-shadow: 0 0 6px rgba(var(--rgb-primary-color), 0.5);
+      box-shadow: 0 0 6px rgba(3, 169, 244, 0.5);
     }
 
     .timeline-now {
@@ -1000,7 +1000,7 @@ class HaCustomScheduleCard extends LitElement {
     .add-new-btn:hover {
       border-color: var(--custom-primary);
       color: var(--custom-primary);
-      background: rgba(var(--rgb-primary-color), 0.05);
+      background: rgba(3, 169, 244, 0.05);
     }
 
     .add-form {
@@ -1061,7 +1061,7 @@ class HaCustomScheduleCard extends LitElement {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 12px rgba(var(--rgb-primary-color), 0.3);
+      box-shadow: 0 4px 12px rgba(3, 169, 244, 0.3);
       transition: transform 0.1s ease;
     }
 
