@@ -1316,8 +1316,8 @@ customElements.define("ha-custom-schedule-card", HaCustomScheduleCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "ha-custom-schedule-card", // custom: 접두어 제거 (HA 공식 문서 권장 사항)
-  name: "스마트 스케줄 카드 (Custom Schedule)",
+  type: "ha-custom-schedule-card",
+  name: "스케줄 카드",
   preview: true,
   description: "스케줄 헬퍼의 시간 블록을 편집하고, 기기를 선택하면 루틴을 자동 생성합니다.",
   documentationURL: "https://github.com/jewon-oh/schedule-ui",
@@ -2179,7 +2179,8 @@ customElements.define("ha-custom-timer-card-editor", HaCustomTimerCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "ha-custom-timer-card",
-  name: "스마트 타이머 카드",
+  name: "타이머 카드",
   preview: true,
-  description: "고급스러운 Glassmorphism 기반의 타이머 카드. 연동 대상을 누르면 자동으로 헬퍼 및 브릿지를 세팅합니다."
+  description: "타이머 헬퍼를 제어하고, 기기를 선택하면 자동화 브릿지를 자동 생성합니다.",
+  documentationURL: "https://github.com/jewon-oh/schedule-ui",
 });
