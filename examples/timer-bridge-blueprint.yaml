@@ -1,6 +1,6 @@
 blueprint:
   name: "스마트 타이머 자동화 브릿지"
-  description: "Timer UI 전용 연동 템플릿입니다. 타이머가 끝났을 때 타겟 기기를 켜거나 끕니다."
+  description: "Timer UI 전용 연동 템플릿입니다. 타이머 시작 시 기기를 켜고, 종료 시 끕니다 (선택한 동작에 따라 역전)."
   domain: automation
   input:
     timer_helper:
@@ -12,13 +12,13 @@ blueprint:
 
     target_device:
       name: 대상 기기 (필수)
-      description: 타이머 종료 시 실제로 제어할 기기를 선택하세요.
+      description: 타이머에 따라 실제로 제어할 기기를 선택하세요.
       selector:
         entity: {}
 
     action_type:
       name: 종료 시 동작
-      description: 타이머가 끝났을 때 어떤 동작을 할지 선택하세요.
+      description: 타이머가 끝났을 때 어떤 동작을 할지 선택하세요. 시작 시에는 반대 동작이 자동 실행됩니다.
       default: "turn_off"
       selector:
         select:
@@ -32,16 +32,44 @@ blueprint:
 
 variables:
   action_type: !input action_type
+  # 시작 시 역동작 매핑: turn_off→turn_on, turn_on→turn_off, toggle→toggle
+  start_action: >-
+    {% if action_type == 'turn_off' %}turn_on{% elif action_type == 'turn_on' %}turn_off{% else %}toggle{% endif %}
 
 trigger:
+  - platform: event
+    event_type: timer.started
+    event_data:
+      entity_id: !input timer_helper
+    id: "timer_started"
+  - platform: event
+    event_type: timer.restarted
+    event_data:
+      entity_id: !input timer_helper
+    id: "timer_started"
   - platform: event
     event_type: timer.finished
     event_data:
       entity_id: !input timer_helper
+    id: "timer_finished"
 
 action:
-  - service: "homeassistant.{{ action_type }}"
-    target:
-      entity_id: !input target_device
+  - choose:
+      # 타이머 시작/재시작 시: 역동작 (기본값: 켜기)
+      - conditions:
+          - condition: trigger
+            id: "timer_started"
+        sequence:
+          - service: "homeassistant.{{ start_action }}"
+            target:
+              entity_id: !input target_device
+      # 타이머 종료 시: 선택한 동작 (기본값: 끄기)
+      - conditions:
+          - condition: trigger
+            id: "timer_finished"
+        sequence:
+          - service: "homeassistant.{{ action_type }}"
+            target:
+              entity_id: !input target_device
 
 mode: single

@@ -1490,6 +1490,17 @@ class HaCustomTimerCard extends LitElement {
     this[propName] = val;
   }
 
+  // 숫자 직접 입력 핸들러
+  _onSpinInput(field, ev) {
+    const limits = { hours: { min: 0, max: 23 }, minutes: { min: 0, max: 59 }, seconds: { min: 0, max: 59 } };
+    const fieldMap = { hours: '_inputHours', minutes: '_inputMinutes', seconds: '_inputSeconds' };
+    const limit = limits[field];
+    let val = parseInt(ev.target.value) || 0;
+    if (val < limit.min) val = limit.min;
+    if (val > limit.max) val = limit.max;
+    this[fieldMap[field]] = val;
+  }
+
   render() {
     if (!this._config) return html`<ha-card><div class="error">Not configured</div></ha-card>`;
 
@@ -1544,21 +1555,21 @@ class HaCustomTimerCard extends LitElement {
             <div class="time-spinner-row">
               <div class="time-spinner">
                 <button class="spin-btn" @click="${() => this._adjustTime('hours', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
-                <div class="spin-value">${String(this._inputHours).padStart(2, '0')}</div>
+                <input class="spin-value" type="number" min="0" max="23" .value="${String(this._inputHours).padStart(2, '0')}" @change="${e => this._onSpinInput('hours', e)}" @focus="${e => e.target.select()}">
                 <button class="spin-btn" @click="${() => this._adjustTime('hours', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
                 <div class="spin-label">시간</div>
               </div>
               <div class="spin-separator">:</div>
               <div class="time-spinner">
                 <button class="spin-btn" @click="${() => this._adjustTime('minutes', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
-                <div class="spin-value">${String(this._inputMinutes).padStart(2, '0')}</div>
+                <input class="spin-value" type="number" min="0" max="59" .value="${String(this._inputMinutes).padStart(2, '0')}" @change="${e => this._onSpinInput('minutes', e)}" @focus="${e => e.target.select()}">
                 <button class="spin-btn" @click="${() => this._adjustTime('minutes', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
                 <div class="spin-label">분</div>
               </div>
               <div class="spin-separator">:</div>
               <div class="time-spinner">
                 <button class="spin-btn" @click="${() => this._adjustTime('seconds', 1)}"><ha-icon icon="mdi:chevron-up"></ha-icon></button>
-                <div class="spin-value">${String(this._inputSeconds).padStart(2, '0')}</div>
+                <input class="spin-value" type="number" min="0" max="59" .value="${String(this._inputSeconds).padStart(2, '0')}" @change="${e => this._onSpinInput('seconds', e)}" @focus="${e => e.target.select()}">
                 <button class="spin-btn" @click="${() => this._adjustTime('seconds', -1)}"><ha-icon icon="mdi:chevron-down"></ha-icon></button>
                 <div class="spin-label">초</div>
               </div>
@@ -1731,13 +1742,33 @@ class HaCustomTimerCard extends LitElement {
     }
 
     .spin-value {
+      width: 64px;
       font-size: 2.4rem;
       font-weight: 700;
       color: var(--custom-text);
-      min-width: 56px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
       text-align: center;
       line-height: 1;
       font-variant-numeric: tabular-nums;
+      font-family: inherit;
+      padding: 4px 0;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      -moz-appearance: textfield;
+    }
+
+    .spin-value::-webkit-outer-spin-button,
+    .spin-value::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .spin-value:focus {
+      border-color: var(--custom-primary);
+      background: rgba(3, 169, 244, 0.08);
+      box-shadow: 0 0 8px rgba(3, 169, 244, 0.2);
     }
 
     .spin-label {
