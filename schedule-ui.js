@@ -1884,18 +1884,17 @@ class HaCustomTimerCardEditor extends LitElement {
       
       const timerEntityId = `timer.${safeSuffix}`;
       
-      // Step A: Timer 헬퍼 생성 (이미 존재하면 무시)
+      // Step A: Timer 헬퍼 생성 (REST API 사용 - Schedule처럼 완벽히 자동 생성되도록 지원)
       try {
-        await this.hass.callWS({
-          type: "timer/create",
+        const payload = {
           name: `${entityName} 타이머`,
           icon: "mdi:timer-sand"
-        });
+        };
+        await this.hass.callApi("POST", `config/timer/config/${safeSuffix}`, payload);
+        console.log("[schedule-ui] timer helper create SUCCESS:", timerEntityId);
       } catch (e) {
-        if (!e.message?.includes("already exists")) {
-          console.warn("Timer helper auto-creation is not supported in this HA version or failed. The user must create it manually. Error:", e);
-          this._creationError = `(안내) 타이머 헬퍼 자동 생성에 실패했습니다. HA 설정 > 헬퍼에서 '${timerEntityId}'를 직접 생성해주세요. (자동화 브릿지는 정상 연결됩니다)`;
-        }
+        console.warn("Timer helper auto-creation failed. Error:", e);
+        this._creationError = `(안내) 타이머 헬퍼 자동 생성에 실패했습니다. HA 설정 > 헬퍼에서 '${timerEntityId}'를 직접 생성해주세요. (자동화 브릿지는 정상 연결됩니다)`;
       }
 
       // Step B: 자동화 브릿지 생성
