@@ -1,60 +1,9 @@
 import {
   LitElement,
   html,
-  css
-} from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+  css,
+} from 'https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js';
 
-const KO_TRANSLATION = {
-  addTitle: "+ 시간 추가",
-  start: "시작",
-  pause: "일시정지",
-  resume: "계속",
-  stop: "취소",
-  preset10m: "+10분",
-  preset30m: "+30분",
-  preset1h: "+1시간",
-  setDuration: "시간 설정",
-  idleMessage: "대기 중",
-  pausedMessage: "일시정지됨",
-  editorTitle: "타이머 UI 설정",
-  editorEntity: "연동된 타이머 엔티티",
-  editorWizardTitle: "새 타이머 & 자동화 마법사",
-  editorWizardDesc: "기기를 선택하면 타이머 헬퍼와 자동화 브릿지가 즉시 생성됩니다.",
-  editorTargetDevice: "대상 기기 선택 (켜고 끌 기기)",
-  editorActionType: "종료 시 동작",
-  editorActionOff: "장치 끄기",
-  editorActionOn: "장치 켜기",
-  editorActionToggle: "상태 반전",
-  editorCreateStr: "타이머 자동 생성"
-};
-
-const EN_TRANSLATION = {
-  addTitle: "+ Add Time",
-  start: "Start",
-  pause: "Pause",
-  resume: "Resume",
-  stop: "Cancel",
-  preset10m: "+10m",
-  preset30m: "+30m",
-  preset1h: "+1h",
-  setDuration: "Set Duration",
-  idleMessage: "Idle",
-  pausedMessage: "Paused",
-  editorTitle: "Timer UI Config",
-  editorEntity: "Linked Timer Entity",
-  editorWizardTitle: "New Timer Wizard",
-  editorWizardDesc: "Select a target device to auto-create timer and automation.",
-  editorTargetDevice: "Select Target Device",
-  editorActionType: "Action on finish",
-  editorActionOff: "Turn Off",
-  editorActionOn: "Turn On",
-  editorActionToggle: "Toggle",
-  editorCreateStr: "Auto Create Timer"
-};
-
-// ==========================================
-// Main Card
-// ==========================================
 class HaCustomTimerCard extends LitElement {
   static properties = {
     hass: { type: Object },
@@ -262,6 +211,7 @@ class HaCustomTimerCard extends LitElement {
 
   static styles = css`
     :host {
+      display: block;
       --custom-primary: var(--primary-color, #03a9f4);
       --custom-bg: var(--card-background-color, rgba(255, 255, 255, 0.05));
       --custom-border: var(--divider-color, rgba(255, 255, 255, 0.1));
@@ -554,25 +504,70 @@ class HaCustomTimerCardEditor extends LitElement {
     try {
       const entityState = this.hass.states[targetEntityId];
       const entityName = entityState?.attributes?.friendly_name || targetEntityId;
-      const safeSuffix = targetEntityId.replace(".", "_");
       
-      const timerEntityId = `timer.${safeSuffix}`;
-      
-      // Step A: Timer 헬퍼 생성 (이미 존재하면 무시)
+      let timerId = null;
+      let timerEntityId = null;
+
+      // Step A: Timer 헬퍼 생성 (Schedule처럼 내부 WS API 활용)
       try {
-        await this.hass.callWS({
+        const payload = {
           type: "timer/create",
           name: `${entityName} 타이머`,
           icon: "mdi:timer-sand"
-        });
+        };
+        const timerResult = await this.hass.callWS(payload);
+        timerId = timerResult.id;
+        timerEntityId = `timer.${timerId}`;
+        console.log("[schedule-ui] timer helper create SUCCESS:", timerEntityId);
       } catch (e) {
-        if (!e.message?.includes("already exists")) {
-            console.log("Timer creation info:", e);
-        }
+        console.warn("Timer helper auto-creation failed via config/timer/create. Error:", e);
+        this._creationError = `(안내) 타이머 헬퍼 생성 실패. 해당 HA 버전에서는 플러그인이 헬퍼를 완전 자동 생성할 수 없습니다. 수동 구성 권장.`;
+        this._isLoading = false;
+        return;
       }
 
-      // Step B: 자동화 브릿지 생성
-      await this._createAutomationBridge(timerEntityId, targetEntityId, this._selectedAction, entityName);
+      // Step B: 자동화 브릿지 생성 (생성된 timerId를 기반으로 Bridge ID 부여)
+      const actionType = this._selectedAction || "turn_off";
+      const bridgeId = `timer_bridge_${timerId}`;
+      const alias = `[Timer Bridge] ${entityName}`;
+      
+      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
+
+      // (브릿지 중복 제거 로직은 필요시 추가하거나, 새로운 브릿지로 안전하게 덮어쓰기)
+      try {
+        const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
+        const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
+        if (existing) {
+          await this.hass.callWS({ type: "config/entity_registry/remove", entity_id: existing.entity_id });
+        }
+      } catch(e) {}
+
+      const bridgePayload = {
+        id: bridgeId,
+        alias: alias,
+        description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
+        mode: "single",
+        trigger: [
+          {
+            platform: "event",
+            event_type: "timer.finished",
+            event_data: {
+              entity_id: timerEntityId
+            }
+          }
+        ],
+        action: [
+          {
+            service: `homeassistant.${actionType}`,
+            target: {
+              entity_id: targetEntityId
+            }
+          }
+        ]
+      };
+
+      await this.hass.callApi("POST", `config/automation/config/${bridgeId}`, bridgePayload);
+      console.log("[schedule-ui] timer automation bridge create SUCCESS:", bridgeId);
 
       // 설정 임시 업데이트
       this._config = {
@@ -597,10 +592,17 @@ class HaCustomTimerCardEditor extends LitElement {
   }
 
   async _createAutomationBridge(timerEntityId, targetEntityId, actionType, entityName) {
-    const bridgeId = `timer_bridge_${targetEntityId.replace(".", "_")}`;
-    const alias = `[Timer Bridge] ${entityName}`;
+      // 동일한 safeSuffix 생성을 통해 삭제/업데이트 추적
+      const safeAscii = targetEntityId.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      const hash = Math.abs(targetEntityId.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16);
+      const safeSuffix = `${safeAscii}_${hash}`;
+      
+      const bridgeId = `timer_bridge_${safeSuffix}`;
+      const alias = `[Timer Bridge] ${entityName}`;
+      
+      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
 
-    // 자동화 삭제 및 재작성 (동일 대상기기에 대한 업데이트)
+      // 자동화 삭제 (기존 방식 유지)
     try {
       const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
       const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
@@ -613,33 +615,31 @@ class HaCustomTimerCardEditor extends LitElement {
     } catch(e) {}
 
     const payload = {
-      type: "config/automation/create",
-      config: {
-        id: bridgeId,
-        alias: alias,
-        description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
-        mode: "single",
-        trigger: [
-          {
-            platform: "event",
-            event_type: "timer.finished",
-            event_data: {
-              entity_id: timerEntityId
-            }
+      id: bridgeId,
+      alias: alias,
+      description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
+      mode: "single",
+      trigger: [
+        {
+          platform: "event",
+          event_type: "timer.finished",
+          event_data: {
+            entity_id: timerEntityId
           }
-        ],
-        action: [
-          {
-            service: `homeassistant.${actionType}`,
-            target: {
-              entity_id: targetEntityId
-            }
+        }
+      ],
+      action: [
+        {
+          service: `homeassistant.${actionType}`,
+          target: {
+            entity_id: targetEntityId
           }
-        ]
-      }
+        }
+      ]
     };
 
-    await this.hass.callWS(payload);
+    // WebSocket 'Unknown command' 에러 해결을 위해 REST API 규격으로 변경 (스케줄 카드와 동일 패턴)
+    await this.hass.callApi("POST", `config/automation/config/${bridgeId}`, payload);
   }
 
   _onActionChange(ev) {
