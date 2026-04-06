@@ -1883,7 +1883,7 @@ class HaCustomTimerCardEditor extends LitElement {
       // Step A: Timer 헬퍼 생성 (Schedule처럼 내부 WS API 활용)
       try {
         const payload = {
-          type: "config/timer/create",
+          type: "timer/create",
           name: `${entityName} 타이머`,
           icon: "mdi:timer-sand"
         };
