@@ -1898,14 +1898,14 @@ class HaCustomTimerCardEditor extends LitElement {
         return;
       }
 
-      // Step B: 자동화 브릿지 생성 (생성된 timerId를 기반으로 Bridge ID 부여)
+      // Step B: 블루프린트 참조 방식으로 자동화 브릿지 생성
       const actionType = this._selectedAction || "turn_off";
       const bridgeId = `timer_bridge_${timerId}`;
       const alias = `[Timer Bridge] ${entityName}`;
       
-      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
+      console.log("[schedule-ui] Creating timer bridge (blueprint):", bridgeId, "for target:", targetEntityId);
 
-      // (브릿지 중복 제거 로직은 필요시 추가하거나, 새로운 브릿지로 안전하게 덮어쓰기)
+      // 기존 동일 ID 브릿지 중복 제거
       try {
         const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
         const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
@@ -1914,32 +1914,22 @@ class HaCustomTimerCardEditor extends LitElement {
         }
       } catch(e) {}
 
+      // 블루프린트 참조 형식 — HA '사용중' 카운트에 반영됨
       const bridgePayload = {
-        id: bridgeId,
         alias: alias,
         description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
-        mode: "single",
-        trigger: [
-          {
-            platform: "event",
-            event_type: "timer.finished",
-            event_data: {
-              entity_id: timerEntityId
-            }
+        use_blueprint: {
+          path: "jewon-oh/timer-bridge-blueprint.yaml",
+          input: {
+            timer_helper: timerEntityId,
+            target_device: targetEntityId,
+            action_type: actionType
           }
-        ],
-        action: [
-          {
-            service: `homeassistant.${actionType}`,
-            target: {
-              entity_id: targetEntityId
-            }
-          }
-        ]
+        }
       };
 
       await this.hass.callApi("POST", `config/automation/config/${bridgeId}`, bridgePayload);
-      console.log("[schedule-ui] timer automation bridge create SUCCESS:", bridgeId);
+      console.log("[schedule-ui] timer automation bridge (blueprint) create SUCCESS:", bridgeId);
 
       // 설정 임시 업데이트
       this._config = {
@@ -1963,56 +1953,7 @@ class HaCustomTimerCardEditor extends LitElement {
     }
   }
 
-  async _createAutomationBridge(timerEntityId, targetEntityId, actionType, entityName) {
-      // 동일한 safeSuffix 생성을 통해 삭제/업데이트 추적
-      const safeAscii = targetEntityId.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-      const hash = Math.abs(targetEntityId.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16);
-      const safeSuffix = `${safeAscii}_${hash}`;
-      
-      const bridgeId = `timer_bridge_${safeSuffix}`;
-      const alias = `[Timer Bridge] ${entityName}`;
-      
-      console.log("[schedule-ui] Creating timer bridge:", bridgeId, "for target:", targetEntityId);
-
-      // 자동화 삭제 (기존 방식 유지)
-    try {
-      const automations = await this.hass.callWS({ type: "config/entity_registry/list" });
-      const existing = automations.find(a => a.entity_id === `automation.${bridgeId}`);
-      if (existing) {
-        await this.hass.callWS({
-          type: "config/automation/delete",
-          automation_id: existing.unique_id || bridgeId
-        });
-      }
-    } catch(e) {}
-
-    const payload = {
-      id: bridgeId,
-      alias: alias,
-      description: "Timer UI 카드에서 자동으로 생성한 브릿지입니다.",
-      mode: "single",
-      trigger: [
-        {
-          platform: "event",
-          event_type: "timer.finished",
-          event_data: {
-            entity_id: timerEntityId
-          }
-        }
-      ],
-      action: [
-        {
-          service: `homeassistant.${actionType}`,
-          target: {
-            entity_id: targetEntityId
-          }
-        }
-      ]
-    };
-
-    // WebSocket 'Unknown command' 에러 해결을 위해 REST API 규격으로 변경 (스케줄 카드와 동일 패턴)
-    await this.hass.callApi("POST", `config/automation/config/${bridgeId}`, payload);
-  }
+  // _createAutomationBridge: 블루프린트 참조 방식으로 _onTargetEntityPicked에 통합 (삭제됨)
 
   _onActionChange(ev) {
     this._selectedAction = ev.target.value;
