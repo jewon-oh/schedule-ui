@@ -32,6 +32,7 @@ blueprint:
 
 variables:
   action_type: !input action_type
+  timer_helper: !input timer_helper
   # 시작 시 역동작 매핑: turn_off→turn_on, turn_on→turn_off, toggle→toggle
   start_action: >-
     {% if action_type == 'turn_off' %}turn_on{% elif action_type == 'turn_on' %}turn_off{% else %}toggle{% endif %}
@@ -52,6 +53,9 @@ trigger:
     event_data:
       entity_id: !input timer_helper
     id: "timer_finished"
+  - platform: state
+    entity_id: !input target_device
+    id: "device_state_changed"
 
 action:
   - choose:
@@ -71,5 +75,24 @@ action:
           - service: "homeassistant.{{ action_type }}"
             target:
               entity_id: !input target_device
+      # 기기를 수동으로 목표 상태로 조작 시: 타이머도 취소 처리
+      - conditions:
+          - condition: trigger
+            id: "device_state_changed"
+          - condition: template
+            value_template: >-
+              {% if action_type == 'turn_off' and trigger.to_state.state == 'off' %}
+                true
+              {% elif action_type == 'turn_on' and trigger.to_state.state == 'on' %}
+                true
+              {% else %}
+                false
+              {% endif %}
+          - condition: template
+            value_template: "{{ states(timer_helper) in ['active', 'paused'] }}"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_helper
 
 mode: single
