@@ -6,15 +6,15 @@ Home Assistant의 순정 `schedule` 및 `timer` 헬퍼를 시각적으로 단일
 
 ## ✨ 주요 기능
 
-* **루틴 자동 생성 마법사 (초간편 설정)** — HA의 복잡한 스케줄 도우미 생성과 자동화 구축을 클릭 한 번으로 끝냅니다. 대시보드 편집창(좌측)에서 제어할 기기만 선택하면, 자동으로 'Schedule 헬퍼'와 '기기 켜짐/꺼짐 자동화(Bridge)'가 즉시 생성되어 화면에 연결됩니다.
-* **단일 파일 구조** — `schedule-ui.js` 하나로 설치와 관리가 간단하며, HACS 커스텀 저장소 등록을 완벽하게 지원합니다.
+* **스케쥴 자동 생성 마법사 (초간편 설정)** — HA의 복잡한 스케쥴 도우미 생성과 자동화 구축을 클릭 한 번으로 끝냅니다. 대시보드 편집창(좌측)에서 제어할 기기만 선택하면, 자동으로 'Schedule 헬퍼'와 '기기 켜짐/꺼짐 자동화(Bridge)'가 즉시 생성되어 화면에 연결됩니다.
+* **단일 파일 구조** — `timer-schedule-card.js` 하나로 설치와 관리가 간단하며, HACS 커스텀 저장소 등록을 완벽하게 지원합니다.
 * **24시간 주간 타임라인** — 등록된 요일별 시간 블록을 24시간 바 형태로 시각화하여 일정을 한눈에 파악할 수 있으며, 현재 시각 표시선을 지원합니다.
 * **매일(Everyday) 통합 관리 탭** — 7개 요일의 공통 시간 블록을 '매일' 탭에서 교집합으로 추출하여 한 번에 확인하고 한꺼번에 삭제/추가할 수 있습니다.
 * **표준 HA UI 호환** — Home Assistant의 Sections 기반 레이아웃에 완벽히 대응하여 디스플레이 크기에 맞게 자동으로 높이를 조절(Auto Resizing)합니다.
 * **다크 테마 최적화** — 모던한 글래스모피즘(Glassmorphism) 스타일로 설계되어 Home Assistant의 다크/라이트 테마에 모두 어울립니다.
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/jewon-oh/schedule-ui/master/assets/preview.png" alt="스케줄 카드 미리보기 UI" width="45%" style="margin-right: 4%;" />
+  <img src="https://raw.githubusercontent.com/jewon-oh/schedule-ui/master/assets/preview.png" alt="스케쥴 카드 미리보기 UI" width="45%" style="margin-right: 4%;" />
   <img src="https://raw.githubusercontent.com/jewon-oh/schedule-ui/master/assets/preview-timer.png" alt="타이머 카드 미리보기 UI" width="45%" />
 </div>
 
@@ -36,8 +36,8 @@ Home Assistant의 순정 `schedule` 및 `timer` 헬퍼를 시각적으로 단일
 
 ### 수동 설치 (Manual)
 
-1. `schedule-ui.js` 파일을 Home Assistant의 `/config/www/` 디렉토리에 복사합니다.
-2. **설정 → 대시보드 → 리소스**에서 `/local/schedule-ui.js`를 `JavaScript Module` 유형으로 추가합니다.
+1. `timer-schedule-card.js` 파일을 Home Assistant의 `/config/www/` 디렉토리에 복사합니다.
+2. **설정 → 대시보드 → 리소스**에서 `/local/timer-schedule-card.js`를 `JavaScript Module` 유형으로 추가합니다.
 
 ---
 
@@ -53,7 +53,7 @@ Home Assistant의 순정 `schedule` 및 `timer` 헬퍼를 시각적으로 단일
 4. 즉시 HA 환경에 도우미(Helper)와 브릿지 자동화가 생성되며 녹색 메시지가 뜹니다.
 5. 뷰어 화면에서 저장 후 편리하게 시간을 지정하시면 실제 기기가 연동되어 작동합니다!
 
-### 방법 2. 기존 스케줄/타이머 도우미 직접 연결하기
+### 방법 2. 기존 스케쥴/타이머 도우미 직접 연결하기
 
 이미 Home Assistant 설정에서 등록해둔 도우미 헬퍼가 있다면, 카드 에디터의 엔티티 선택 창에서 원하시는 대상을 직접 선택하시면 즉시 뷰어로 연동됩니다.
 
@@ -61,11 +61,11 @@ Home Assistant의 순정 `schedule` 및 `timer` 헬퍼를 시각적으로 단일
 
 ## 🛠 구성 요소 리스트
 
-1. **스케줄 카드**: 24시간 주간 타임라인 관리 및 요일별 통합 제어
+1. **스케쥴 카드**: 24시간 주간 타임라인 관리 및 요일별 통합 제어
 2. **타이머 카드**: 원형 프로그레스 바 및 기기 오프 타이머 지원
 
 ### 통합 설치 패키지 추가 시
-HACS 등을 통해 구성 후 `/local/schedule-ui.js` 파일 하나만 리소스로 로드해주시면 **두 카드 모두 대시보드에서 마음껏 꺼내 쓰실 수 있습니다.** (복잡함을 없애기 위해 물리적으로 단일 파일로 완전 병합하였습니다!)
+HACS 등을 통해 구성 후 `/local/timer-schedule-card.js` 파일 하나만 리소스로 로드해주시면 **두 카드 모두 대시보드에서 마음껏 꺼내 쓰실 수 있습니다.** (복잡함을 없애기 위해 물리적으로 단일 파일로 완전 병합하였습니다!)
 
 ---
 
@@ -75,14 +75,14 @@ HACS 등을 통해 구성 후 `/local/schedule-ui.js` 파일 하나만 리소스
 
 ```yaml
 type: custom:ha-custom-schedule-card
-entity: schedule.livingroom_light      # 스케줄 엔티티 ID (필수)
+entity: schedule.livingroom_light      # 스케쥴 엔티티 ID (필수)
 title: 거실 전등 일정                  # 카드 제목 (선택사항)
 ```
 
 | 옵션 | 필수 | 설명 |
 |------|------|------|
-| `entity` | O | 스케줄 헬퍼의 엔티티 ID. `schedule.*` 도메인만 지원합니다. |
-| `title` | X | 카드 상단에 표시할 제목. 미입력 시 스케줄의 기본 이름이 표시됩니다. |
+| `entity` | O | 스케쥴 헬퍼의 엔티티 ID. `schedule.*` 도메인만 지원합니다. |
+| `title` | X | 카드 상단에 표시할 제목. 미입력 시 스케쥴의 기본 이름이 표시됩니다. |
 
 ---
 

@@ -1,6 +1,6 @@
 {
-  "name": "Custom Schedule Card",
+  "name": "HA Timer And Schedule Card",
   "render_readme": true,
-  "filename": "schedule-ui.js",
+  "filename": "timer-schedule-card.js",
   "iot_class": "Local Push"
 }

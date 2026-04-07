@@ -18,21 +18,21 @@ const LOCALES = {
     days: ["월", "화", "수", "목", "금", "토", "일"],
     daysShort: ["월", "화", "수", "목", "금", "토", "일"],
     everyday: "매일",
-    empty: "설정된 스케줄이 없습니다.",
-    errorEntity: "스케줄 엔티티를 설정해야 합니다.",
-    scheduleManager: "스케줄 관리",
-    // 루틴 생성 마법사
-    createRoutine: "새 루틴 만들기",
-    routineName: "루틴 이름",
-    routineNamePlaceholder: "예: 거실 전등 루틴",
+    empty: "설정된 스케쥴이 없습니다.",
+    errorEntity: "스케쥴 엔티티를 설정해야 합니다.",
+    scheduleManager: "스케쥴 관리",
+    // 스케쥴 생성 마법사
+    createRoutine: "새 스케쥴 만들기",
+    routineName: "스케쥴 이름",
+    routineNamePlaceholder: "예: 거실 전등 스케쥴",
     targetDevice: "대상 기기",
-    create: "루틴 생성",
+    create: "스케쥴 생성",
     creating: "생성 중...",
-    createSuccess: "루틴이 생성되었습니다!",
-    createFailed: "루틴 생성에 실패했습니다.",
-    createDescription: "기기를 선택하면 스케줄과 자동화가 자동으로 생성됩니다.",
-    orSelectExisting: "또는 기존 스케줄을 편집기에서 선택하세요.",
-    goToCard: "카드 편집에서 새 스케줄을 선택해주세요.",
+    createSuccess: "스케쥴이 생성되었습니다!",
+    createFailed: "스케쥴 생성에 실패했습니다.",
+    createDescription: "기기를 선택하면 스케쥴과 자동화가 자동으로 생성됩니다.",
+    orSelectExisting: "또는 기존 스케쥴을 편집기에서 선택하세요.",
+    goToCard: "카드 편집에서 새 스케쥴을 선택해주세요.",
   },
   en: {
     addBlock: "Add New Block",
@@ -46,7 +46,7 @@ const LOCALES = {
     empty: "No schedules configured.",
     errorEntity: "You need to define a schedule entity.",
     scheduleManager: "Schedule Manager",
-    // 루틴 생성 마법사
+    // 스케쥴 생성 마법사
     createRoutine: "Create New Routine",
     routineName: "Routine Name",
     routineNamePlaceholder: "e.g. Living Room Light",
@@ -274,7 +274,7 @@ class HaCustomScheduleCard extends LitElement {
     e.preventDefault();
     if (this._isEditing || !this._config?.entity) return;
     if (!this._scheduleData) {
-      console.warn("[schedule-ui] _addBlock 차단: 스케줄 데이터가 로드되지 않았습니다.");
+      console.warn("[schedule-ui] _addBlock 차단: 스케쥴 데이터가 로드되지 않았습니다.");
       return;
     }
     
@@ -348,7 +348,7 @@ class HaCustomScheduleCard extends LitElement {
           <div class="card-content">
             <div class="empty-state">
               <ha-icon icon="mdi:calendar-plus" style="--mdc-icon-size: 48px; opacity: 0.4; margin-bottom: 12px;"></ha-icon>
-              <p style="margin: 0; color: var(--secondary-text-color, #a0a0a0);">스마트 스케줄 카드</p>
+              <p style="margin: 0; color: var(--secondary-text-color, #a0a0a0);">스마트 스케쥴 카드</p>
             </div>
           </div>
         </ha-card>
@@ -550,7 +550,7 @@ class HaCustomScheduleCard extends LitElement {
       position: relative;
     }
 
-    /* ── 루틴 생성 마법사 ── */
+    /* ── 스케쥴 생성 마법사 ── */
     .create-wizard {
       animation: fadeIn 0.3s ease;
     }
@@ -1121,10 +1121,10 @@ class HaCustomScheduleCardEditor extends LitElement {
     const targetEntityId = ev.detail.value;
     if (this._isCreating || !this.hass || !targetEntityId) return;
 
-    // 기기 이름 기반으로 루틴 이름 자동 생성
+    // 기기 이름 기반으로 스케쥴 이름 자동 생성
     const entityObj = this.hass.states[targetEntityId];
     const friendlyName = entityObj?.attributes?.friendly_name || targetEntityId.split('.')[1] || "알 수 없는 기기";
-    const routineName = `${friendlyName} 루틴`;
+    const routineName = `${friendlyName} 스케쥴`;
 
     this._isCreating = true;
     this._createResult = null;
@@ -1148,8 +1148,8 @@ class HaCustomScheduleCardEditor extends LitElement {
 
       const automationId = `bridge_${scheduleId}`;
       const automationPayload = {
-        alias: `스케줄 브릿지: ${routineName}`,
-        description: `[schedule-ui] ${routineName} 스케줄에 따라 기기를 자동 제어합니다.`,
+        alias: `스케쥴 브릿지: ${routineName}`,
+        description: `[schedule-ui] ${routineName} 스케쥴에 따라 기기를 자동 제어합니다.`,
         trigger: [
           { platform: "state", entity_id: scheduleEntityId, to: "on", id: "schedule_started" },
           { platform: "state", entity_id: scheduleEntityId, to: "off", id: "schedule_ended" },
@@ -1202,10 +1202,10 @@ class HaCustomScheduleCardEditor extends LitElement {
         <div class="wizard-section">
           <div style="font-weight: 600; color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
             <ha-icon icon="mdi:magic-staff"></ha-icon> 
-            <span>${isKo ? '새 루틴 만들기 (권장)' : 'Create New Routine'}</span>
+            <span>${isKo ? '새 스케쥴 만들기 (권장)' : 'Create New Routine'}</span>
           </div>
           <p style="font-size: 0.85rem; color: var(--secondary-text-color); margin: 8px 0 16px 0; line-height: 1.4;">
-            ${isKo ? '자동화할 기기를 선택하면 스케줄 제어 장치와 동작 브릿지가 즉시 생성되고 이 카드에 자동으로 연동됩니다.' : 'Pick a device to auto-create a schedule helper and automation bridge.'}
+            ${isKo ? '자동화할 기기를 선택하면 스케쥴 제어 장치와 동작 브릿지가 즉시 생성되고 이 카드에 자동으로 연동됩니다.' : 'Pick a device to auto-create a schedule helper and automation bridge.'}
           </p>
 
           ${this._isCreating ? html`
@@ -1240,7 +1240,7 @@ class HaCustomScheduleCardEditor extends LitElement {
         <div style="height: 1px; background: var(--divider-color, rgba(100,100,100,0.2)); margin: 24px 0;"></div>
 
         <div style="font-weight: 600; margin-bottom: 16px; color: var(--primary-text-color);">
-          ${isKo ? '기존 스케줄 다시 불러오기 및 추가 설정' : 'Advanced Configuration'}
+          ${isKo ? '기존 스케쥴 다시 불러오기 및 추가 설정' : 'Advanced Configuration'}
         </div>
 
         <ha-selector
@@ -1248,7 +1248,7 @@ class HaCustomScheduleCardEditor extends LitElement {
           .selector=${{ entity: { domain: "schedule" } }}
           .value=${this._config.entity || ""}
           .required=${false}
-          .label=${isKo ? '스케줄 기기 (직접 선택)' : 'Schedule Entity'}
+          .label=${isKo ? '스케쥴 기기 (직접 선택)' : 'Schedule Entity'}
           @value-changed=${this._entityChanged}
         ></ha-selector>
 
@@ -1317,9 +1317,9 @@ customElements.define("ha-custom-schedule-card", HaCustomScheduleCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "ha-custom-schedule-card",
-  name: "스케줄 카드",
+  name: "스케쥴 카드",
   preview: true,
-  description: "스케줄 헬퍼의 시간 블록을 편집하고, 기기를 선택하면 루틴을 자동 생성합니다.",
+  description: "스케쥴 헬퍼의 시간 블록을 편집하고, 기기를 선택하면 스케쥴을 자동 생성합니다.",
   documentationURL: "https://github.com/jewon-oh/schedule-ui",
 });
 

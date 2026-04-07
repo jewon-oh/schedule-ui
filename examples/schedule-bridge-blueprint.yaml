@@ -1,18 +1,18 @@
 blueprint:
-  name: "스마트 스케줄러 자동화 브릿지"
-  description: "Schedule UI 전용 연동 템플릿입니다. 스케줄(일정) 헬퍼의 시간 블록에 따라 타겟 기기를 완벽하게 켜고 끕니다."
+  name: "스마트 스케쥴러 자동화 브릿지"
+  description: "Schedule UI 전용 연동 템플릿입니다. 스케쥴(일정) 헬퍼의 시간 블록에 따라 타겟 기기를 완벽하게 켜고 끕니다."
   domain: automation
   input:
     schedule_helper:
-      name: 스케줄 도우미 (필수)
-      description: 카드에서 제어하고 있는 스케줄 엔티티를 선택하세요.
+      name: 스케쥴 도우미 (필수)
+      description: 카드에서 제어하고 있는 스케쥴 엔티티를 선택하세요.
       selector:
         entity:
           domain: schedule
 
     target_device:
       name: 대상 기기 (필수)
-      description: 스케줄 시간에 맞춰 실제로 켜지고 꺼질 기기(전등, 스위치, 스마트 홈 기기 등)를 선택하세요.
+      description: 스케쥴 시간에 맞춰 실제로 켜지고 꺼질 기기(전등, 스위치, 스마트 홈 기기 등)를 선택하세요.
       selector:
         entity: {} # 모든 도메인(switch, light 등) 허용
 
