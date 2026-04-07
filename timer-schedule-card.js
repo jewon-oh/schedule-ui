@@ -1151,7 +1151,7 @@ class HaCustomScheduleCardEditor extends LitElement {
         alias: `스케쥴 브릿지: ${routineName}`,
         description: `[schedule-ui] ${routineName} 스케쥴에 따라 기기를 자동 제어합니다.`,
         use_blueprint: {
-          path: "schedule-bridge-blueprint.yaml",
+          path: "jewon-oh/schedule-bridge-blueprint.yaml",
           input: {
             schedule_helper: scheduleEntityId,
             target_device: targetEntityId
