@@ -277,6 +277,7 @@ class HaCustomScheduleCard extends LitElement {
       console.warn("[schedule-ui] _addBlock 차단: 스케쥴 데이터가 로드되지 않았습니다.");
       return;
     }
+    if (this._addFormDays.length === 0) return;
     
     const form = e.target;
     // HH:MM 포맷에 :00을 붙여 HH:MM:00 형식으로 변환 (HA WebSocket 규격)
@@ -285,26 +286,16 @@ class HaCustomScheduleCard extends LitElement {
     
     if (!start || !end) return;
 
-    // '매일' 탭: 7개 요일 모두에 동일한 시간 블록을 일괄 추가
-    if (this._selectedDay === EVERYDAY_INDEX) {
-      const updatedData = { ...this._scheduleData };
-      for (const weekday of WEEKDAYS) {
-        const blocks = updatedData[weekday] ? [...updatedData[weekday]] : [];
-        blocks.push({ from: start, to: end });
-        updatedData[weekday] = blocks;
-      }
-      this._scheduleData = updatedData;
-      this._showAddForm = false;
-      this._updateSchedule();
-      return;
+    const updatedData = { ...this._scheduleData };
+    
+    for (const dayIdx of this._addFormDays) {
+      const dayStr = WEEKDAYS[dayIdx];
+      const currentBlocks = updatedData[dayStr] ? [...updatedData[dayStr]] : [];
+      currentBlocks.push({ from: start, to: end });
+      updatedData[dayStr] = currentBlocks;
     }
-
-    const dayStr = WEEKDAYS[this._selectedDay];
-    const currentBlocks = this._scheduleData[dayStr] ? [...this._scheduleData[dayStr]] : [];
     
-    currentBlocks.push({ from: start, to: end });
-    
-    this._scheduleData = { ...this._scheduleData, [dayStr]: currentBlocks };
+    this._scheduleData = updatedData;
     this._showAddForm = false;
     this._updateSchedule();
   }
@@ -467,6 +458,35 @@ class HaCustomScheduleCard extends LitElement {
 
             ${this._showAddForm ? html`
               <form class="add-form" @submit="${this._addBlock}">
+                <div class="form-days">
+                  <label style="display:block; font-size: 0.85rem; color: var(--custom-secondary); margin-bottom: 8px;">적용할 요일</label>
+                  <div class="day-chip-group" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
+                    ${WEEKDAYS.map((_, i) => html`
+                      <div class="day-chip form-chip ${this._addFormDays.includes(i) ? 'selected' : ''}"
+                           style="padding: 6px 12px; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.includes(i) ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.includes(i) ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
+                           @click="${() => {
+                             if(this._addFormDays.includes(i)) {
+                               this._addFormDays = this._addFormDays.filter(d => d !== i);
+                             } else {
+                               this._addFormDays = [...this._addFormDays, i];
+                             }
+                           }}">
+                        ${this._t("days")[i]}
+                      </div>
+                    `)}
+                    <div class="day-chip form-chip ${this._addFormDays.length === 7 ? 'selected' : ''}"
+                         style="padding: 6px 12px; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.length === 7 ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.length === 7 ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
+                         @click="${() => {
+                           if(this._addFormDays.length === 7) {
+                             this._addFormDays = [];
+                           } else {
+                             this._addFormDays = [0,1,2,3,4,5,6];
+                           }
+                         }}">
+                      ${this._t("everyday")}
+                    </div>
+                  </div>
+                </div>
                 <div class="time-inputs">
                   <div class="input-group">
                     <label>${this._t("startTime")}</label>
@@ -477,13 +497,16 @@ class HaCustomScheduleCard extends LitElement {
                     <input type="time" id="end" required>
                   </div>
                 </div>
-                <button type="submit" class="primary-btn" ?disabled=${this._isEditing}>
+                <button type="submit" class="primary-btn" ?disabled=${this._isEditing || this._addFormDays.length === 0}>
                   <ha-icon icon="mdi:plus-circle"></ha-icon>
                   ${this._t("add")}
                 </button>
               </form>
             ` : html`
-              <button class="add-new-btn" @click="${() => this._showAddForm = true}">
+              <button class="add-new-btn" @click="${() => {
+                this._showAddForm = true;
+                this._addFormDays = this._selectedDay === EVERYDAY_INDEX ? [0,1,2,3,4,5,6] : [this._selectedDay];
+              }}">
                 <ha-icon icon="mdi:plus"></ha-icon>
                 ${this._t("addBlock")}
               </button>
@@ -526,9 +549,9 @@ class HaCustomScheduleCard extends LitElement {
     }
 
     .card-header .name {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--secondary-text-color, #a0a0a0);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--primary-text-color, #ffffff);
       letter-spacing: 0.1px;
     }
 
@@ -1675,9 +1698,9 @@ class HaCustomTimerCard extends LitElement {
     }
 
     .card-header .name {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--secondary-text-color, #a0a0a0);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--primary-text-color, #ffffff);
       letter-spacing: 0.1px;
     }
 
