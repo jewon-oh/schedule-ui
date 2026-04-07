@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.4 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.5 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -278,14 +278,28 @@ class HaCustomScheduleCard extends LitElement {
       console.warn("[schedule-ui] _addBlock 차단: 스케쥴 데이터가 로드되지 않았습니다.");
       return;
     }
-    if (this._addFormDays.length === 0) return;
+    if (this._addFormDays.length === 0) {
+      alert("적용할 요일을 최소 1개 이상 선택해주세요.");
+      return;
+    }
     
     const form = e.target;
+    const startVal = form.querySelector("#start").value;
+    const endVal = form.querySelector("#end").value;
+
+    if (!startVal || !endVal) {
+      alert("시작 시간과 종료 시간을 모두 입력해주세요.");
+      return;
+    }
+
+    if (startVal >= endVal) {
+      alert("종료 시간은 시작 시간보다 늦어야 합니다.");
+      return;
+    }
+
     // HH:MM 포맷에 :00을 붙여 HH:MM:00 형식으로 변환 (HA WebSocket 규격)
-    const start = form.querySelector("#start").value + ":00";
-    const end = form.querySelector("#end").value + ":00";
-    
-    if (!start || !end) return;
+    const start = startVal + ":00";
+    const end = endVal + ":00";
 
     const updatedData = { ...this._scheduleData };
     
