@@ -1319,12 +1319,12 @@ const KO_TRANSLATION = {
   pause: "일시정지",
   resume: "계속",
   stop: "취소",
+  preset5m: "+5분",
   preset10m: "+10분",
   preset30m: "+30분",
-  preset1h: "+1시간",
+  presetMinus5m: "-5분",
   presetMinus10m: "-10분",
   presetMinus30m: "-30분",
-  presetMinus1h: "-1시간",
   setDuration: "시간 설정",
   idleMessage: "대기 중",
   pausedMessage: "일시정지됨",
@@ -1346,12 +1346,12 @@ const EN_TRANSLATION = {
   pause: "Pause",
   resume: "Resume",
   stop: "Cancel",
+  preset5m: "+5m",
   preset10m: "+10m",
   preset30m: "+30m",
-  preset1h: "+1h",
+  presetMinus5m: "-5m",
   presetMinus10m: "-10m",
   presetMinus30m: "-30m",
-  presetMinus1h: "-1h",
   setDuration: "Set Duration",
   idleMessage: "Idle",
   pausedMessage: "Paused",
@@ -1601,14 +1601,14 @@ class HaCustomTimerCard extends LitElement {
 
           <div class="presets-container" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
             <div class="presets">
+              <button class="preset-btn minus" @click="${() => this._addTime(-5)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus5m')}</button>
               <button class="preset-btn minus" @click="${() => this._addTime(-10)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus10m')}</button>
               <button class="preset-btn minus" @click="${() => this._addTime(-30)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus30m')}</button>
-              <button class="preset-btn minus" @click="${() => this._addTime(-60)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus1h')}</button>
             </div>
             <div class="presets">
+              <button class="preset-btn" @click="${() => this._addTime(5)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset5m')}</button>
               <button class="preset-btn" @click="${() => this._addTime(10)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset10m')}</button>
               <button class="preset-btn" @click="${() => this._addTime(30)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset30m')}</button>
-              <button class="preset-btn" @click="${() => this._addTime(60)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset1h')}</button>
             </div>
           </div>
 
