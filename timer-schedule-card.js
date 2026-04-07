@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.3 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.4 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -387,15 +387,12 @@ class HaCustomScheduleCard extends LitElement {
         </div>
 
         <div class="card-content">
-          <div class="days-container">
+            <div class="days-container">
               ${WEEKDAYS.map((_, i) => html`
                 <div class="day-chip ${this._selectedDay === i ? 'selected' : ''}" @click="${() => { this._selectedDay = i; this._showAddForm = false; }}">
                   ${this._t("days")[i]}
                 </div>
               `)}
-              <div class="day-chip everyday ${this._selectedDay === EVERYDAY_INDEX ? 'selected' : ''}" @click="${() => { this._selectedDay = EVERYDAY_INDEX; this._showAddForm = false; }}">
-                ${this._t("everyday")}
-              </div>
             </div>
 
             <!-- 주간 타임라인 -->
@@ -478,6 +475,17 @@ class HaCustomScheduleCard extends LitElement {
                         ${this._t("days")[i]}
                       </div>
                     `)}
+                    <div class="day-chip form-chip ${this._addFormDays.length === 7 ? 'selected' : ''}"
+                         style="padding: 8px 14px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.length === 7 ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.length === 7 ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
+                         @click="${() => {
+                           if(this._addFormDays.length === 7) {
+                             this._addFormDays = [];
+                           } else {
+                             this._addFormDays = [0,1,2,3,4,5,6];
+                           }
+                         }}">
+                      ${this._t("everyday")}
+                    </div>
                   </div>
                 </div>
                 <div class="time-inputs">
