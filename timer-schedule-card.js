@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.2 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.3 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -244,30 +244,30 @@ class HaCustomScheduleCard extends LitElement {
     );
   }
 
-  _deleteBlock(day, index) {
+  _deleteBlock(day, targetBlock) {
     if (this._isEditing || !this._scheduleData || !this._config?.entity) return;
 
-    // '매일' 탭: 7개 요일 모두에서 해당 시간 블록을 일괄 삭제
-    if (this._selectedDay === EVERYDAY_INDEX) {
-      const everydayBlocks = this._getEverydayBlocks(this._scheduleData);
-      const target = everydayBlocks[index];
-      if (!target) return;
+    // '매일(Everyday)' 블록인지 우선 판별
+    const everydayBlocks = this._getEverydayBlocks(this._scheduleData);
+    const isTargetEveryday = everydayBlocks.some(b => b.from === targetBlock.from && b.to === targetBlock.to);
 
-      const updatedData = { ...this._scheduleData };
+    const updatedData = { ...this._scheduleData };
+
+    if (isTargetEveryday) {
+      // 7개 요일 모두에 존재하는 매일 타임블록은 한 번에 삭제
       for (const weekday of WEEKDAYS) {
         const blocks = updatedData[weekday] || [];
-        updatedData[weekday] = blocks.filter(
-          b => !(b.from === target.from && b.to === target.to)
-        );
+        updatedData[weekday] = blocks.filter(b => !(b.from === targetBlock.from && b.to === targetBlock.to));
       }
-      this._scheduleData = updatedData;
-      this._updateSchedule();
-      return;
+    } else {
+      // 특정 요일에만 존재할 경우 해당 요일에서만 삭제
+      if (day) {
+        const currentBlocks = updatedData[day] || [];
+        updatedData[day] = currentBlocks.filter(b => !(b.from === targetBlock.from && b.to === targetBlock.to));
+      }
     }
 
-    const currentBlocks = [...this._scheduleData[day]];
-    currentBlocks.splice(index, 1);
-    this._scheduleData = { ...this._scheduleData, [day]: currentBlocks };
+    this._scheduleData = updatedData;
     this._updateSchedule();
   }
 
@@ -443,18 +443,21 @@ class HaCustomScheduleCard extends LitElement {
             <div class="blocks-container">
               ${sortedBlocks.length === 0 ? html`
                 <div class="empty-state">${this._t("empty")}</div>
-              ` : sortedBlocks.map((block, i) => html`
+              ` : sortedBlocks.map((block) => {
+                const isEverydayBlock = this._getEverydayBlocks(renderData).some(b => b.from === block.from && b.to === block.to);
+                return html`
                 <div class="time-block">
                   <div class="time-text">
+                    ${isEverydayBlock ? html`<span class="daily-badge" style="background:var(--custom-primary); color:var(--card-background-color); font-size:0.75rem; font-weight:600; padding:2px 6px; border-radius:4px; margin-right:8px;">${this._t("everyday")}</span>` : ''}
                     <span>${this._formatTime(block.from)}</span>
                     <span class="divider">~</span>
                     <span>${this._formatTime(block.to)}</span>
                   </div>
-                  <button class="icon-btn delete-btn" @click="${() => this._deleteBlock(isEveryday ? null : dayStr, i)}" ?disabled=${this._isEditing}>
+                  <button class="icon-btn delete-btn" @click="${() => this._deleteBlock(isEveryday ? null : dayStr, block)}" ?disabled=${this._isEditing}>
                     <ha-icon icon="mdi:trash-can-outline"></ha-icon>
                   </button>
                 </div>
-              `)}
+              `})}
             </div>
 
             ${this._showAddForm ? html`
