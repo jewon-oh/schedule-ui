@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.6 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.7 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -1642,6 +1642,16 @@ class HaCustomTimerCard extends LitElement {
                 <span class="time-colon">:</span>
                 <span class="time-digit">${String(s).padStart(2, '0')}</span>
               </div>
+              <div class="timer-message" style="margin-top: 8px; font-size: 0.95rem; color: var(--custom-secondary); display: flex; justify-content: center;">
+                ${(() => {
+                  let timeArr = [];
+                  if(h > 0) timeArr.push(h + this._t("hoursStr"));
+                  if(m > 0 || h > 0) timeArr.push(m + this._t("minutesStr"));
+                  timeArr.push(s + this._t("secondsStr"));
+                  const remainStr = timeArr.join(' ');
+                  return html`<span style="background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 12px;">${remainStr} 후에 기기가 종료됩니다.</span>`;
+                })()}
+              </div>
             </div>
             <div class="progress-bar-container">
               <div class="progress-bar ${state}" style="width: ${progressPercent}%;"></div>
@@ -1650,14 +1660,14 @@ class HaCustomTimerCard extends LitElement {
 
           <div class="presets-container" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
             <div class="presets">
-              <button class="preset-btn minus" @click="${() => this._addTime(-5)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus5m')}</button>
-              <button class="preset-btn minus" @click="${() => this._addTime(-10)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus10m')}</button>
-              <button class="preset-btn minus" @click="${() => this._addTime(-30)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus30m')}</button>
-            </div>
-            <div class="presets">
               <button class="preset-btn" @click="${() => this._addTime(5)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset5m')}</button>
               <button class="preset-btn" @click="${() => this._addTime(10)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset10m')}</button>
               <button class="preset-btn" @click="${() => this._addTime(30)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('preset30m')}</button>
+            </div>
+            <div class="presets">
+              <button class="preset-btn minus" @click="${() => this._addTime(-5)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus5m')}</button>
+              <button class="preset-btn minus" @click="${() => this._addTime(-10)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus10m')}</button>
+              <button class="preset-btn minus" @click="${() => this._addTime(-30)}" ?disabled="${state !== 'idle' && !isDummy}">${this._t('presetMinus30m')}</button>
             </div>
           </div>
 

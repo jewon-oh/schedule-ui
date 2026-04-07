@@ -52,11 +52,6 @@ trigger:
     event_data:
       entity_id: !input timer_helper
     id: "timer_finished"
-  - platform: event
-    event_type: timer.cancelled
-    event_data:
-      entity_id: !input timer_helper
-    id: "timer_finished"
 
 action:
   - choose:
