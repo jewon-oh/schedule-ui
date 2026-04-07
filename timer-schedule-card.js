@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.5 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.6 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -250,6 +250,12 @@ class HaCustomScheduleCard extends LitElement {
     // '매일(Everyday)' 블록인지 우선 판별
     const everydayBlocks = this._getEverydayBlocks(this._scheduleData);
     const isTargetEveryday = everydayBlocks.some(b => b.from === targetBlock.from && b.to === targetBlock.to);
+
+    const confirmMsg = isTargetEveryday
+      ? "이 타임블록은 매일(월~일) 등록되어 있습니다.\\n삭제하시면 모든 요일에서 일괄 삭제됩니다. 계속하시겠습니까?"
+      : "선택하신 요일의 스케줄을 삭제하시겠습니까?";
+      
+    if (!confirm(confirmMsg)) return;
 
     const updatedData = { ...this._scheduleData };
 
