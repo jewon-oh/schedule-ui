@@ -6,7 +6,7 @@ import {
 
 
 // 파일 로드 확인용 버전 로그 (이 메시지가 콘솔에 안 보이면 구버전이 캐시된 것)
-console.log("%c[schedule-ui] v1.2.0 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
+console.log("%c[schedule-ui] v1.2.2 loaded", "color: #03a9f4; font-weight: bold; font-size: 14px;");
 
 const LOCALES = {
   ko: {
@@ -78,6 +78,7 @@ class HaCustomScheduleCard extends LitElement {
     _showCreateWizard: { state: true },
     _isCreating: { state: true },
     _createResult: { state: true },
+    _addFormDays: { state: true },
   };
 
   constructor() {
@@ -463,7 +464,7 @@ class HaCustomScheduleCard extends LitElement {
                   <div class="day-chip-group" style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;">
                     ${WEEKDAYS.map((_, i) => html`
                       <div class="day-chip form-chip ${this._addFormDays.includes(i) ? 'selected' : ''}"
-                           style="padding: 6px 12px; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.includes(i) ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.includes(i) ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
+                           style="padding: 8px 14px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.includes(i) ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.includes(i) ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
                            @click="${() => {
                              if(this._addFormDays.includes(i)) {
                                this._addFormDays = this._addFormDays.filter(d => d !== i);
@@ -474,17 +475,6 @@ class HaCustomScheduleCard extends LitElement {
                         ${this._t("days")[i]}
                       </div>
                     `)}
-                    <div class="day-chip form-chip ${this._addFormDays.length === 7 ? 'selected' : ''}"
-                         style="padding: 6px 12px; font-size: 0.85rem; cursor: pointer; border-radius: 8px; border: 1px solid var(--custom-border); background: ${this._addFormDays.length === 7 ? 'var(--custom-active-bg)' : 'transparent'}; color: ${this._addFormDays.length === 7 ? 'var(--custom-primary)' : 'var(--custom-secondary)'}; transition: all 0.2s ease;"
-                         @click="${() => {
-                           if(this._addFormDays.length === 7) {
-                             this._addFormDays = [];
-                           } else {
-                             this._addFormDays = [0,1,2,3,4,5,6];
-                           }
-                         }}">
-                      ${this._t("everyday")}
-                    </div>
                   </div>
                 </div>
                 <div class="time-inputs">
