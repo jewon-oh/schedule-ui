@@ -1039,7 +1039,7 @@ class HaCustomScheduleCard extends LitElement {
     }
 
     input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: invert(1) brightness(2);
+      /* color-scheme: dark 설정에 의해 기본적으로 흰색이 되므로 명시적 반전 제거 */
       opacity: 0.8;
       cursor: pointer;
     }
@@ -1150,25 +1150,13 @@ class HaCustomScheduleCardEditor extends LitElement {
       const automationPayload = {
         alias: `스케쥴 브릿지: ${routineName}`,
         description: `[schedule-ui] ${routineName} 스케쥴에 따라 기기를 자동 제어합니다.`,
-        trigger: [
-          { platform: "state", entity_id: scheduleEntityId, to: "on", id: "schedule_started" },
-          { platform: "state", entity_id: scheduleEntityId, to: "off", id: "schedule_ended" },
-        ],
-        action: [
-          {
-            choose: [
-              {
-                conditions: [{ condition: "trigger", id: "schedule_started" }],
-                sequence: [{ service: "homeassistant.turn_on", target: { entity_id: targetEntityId } }],
-              },
-              {
-                conditions: [{ condition: "trigger", id: "schedule_ended" }],
-                sequence: [{ service: "homeassistant.turn_off", target: { entity_id: targetEntityId } }],
-              },
-            ],
-          },
-        ],
-        mode: "single",
+        use_blueprint: {
+          path: "schedule-bridge-blueprint.yaml",
+          input: {
+            schedule_helper: scheduleEntityId,
+            target_device: targetEntityId
+          }
+        }
       };
 
       await this.hass.callApi("POST", `config/automation/config/${automationId}`, automationPayload);
@@ -1467,15 +1455,16 @@ class HaCustomTimerCard extends LitElement {
   }
 
   _addTime(minutes) {
-    // If active or paused, we can add time. Wait, timer.start with existing timer OVERRIDES the duration?
-    // Wait, adding time to a running timer in HA dynamically can be done via timer.change?
-    // No, there is no generic "timer.change".
-    // Actually, HA timer doesn't support adding time casually unless cancelled and restarted, 
-    // OR we can just override it with new duration. 
-    // Wait, timer supports "timer.add"! Service is "timer.add", let's use it? No, wait... 
-    // As of recent HA versions, timer.start doesn't append time, it resets. 
-    // Let's just reset the timer if user clicks presets during IDLE.
-    this._startTimerPreset(minutes);
+    let totalMinutes = (this._inputHours * 60) + this._inputMinutes + minutes;
+    this._inputHours = Math.floor(totalMinutes / 60);
+    this._inputMinutes = totalMinutes % 60;
+    
+    // 최대 시간 초과 방지
+    if (this._inputHours > 99) {
+       this._inputHours = 99;
+       this._inputMinutes = 59;
+    }
+    this.requestUpdate();
   }
 
   // 시간 값 증감 핸들러
