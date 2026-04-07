@@ -340,9 +340,9 @@ class HaCustomScheduleCard extends LitElement {
       return html`
         <ha-card>
           <div class="card-header">
-            <div class="title-group">
+            <div class="name">${this._config.title || LOCALES["ko"].scheduleManager}</div>
+            <div class="header-right">
               <ha-icon icon="mdi:calendar-clock"></ha-icon>
-              <h2>${this._config.title || LOCALES["ko"].scheduleManager}</h2>
             </div>
           </div>
           <div class="card-content">
@@ -388,9 +388,9 @@ class HaCustomScheduleCard extends LitElement {
       <ha-card>
 
         <div class="card-header">
-          <div class="title-group">
+          <div class="name">${customTitle}</div>
+          <div class="header-right">
             <ha-icon icon="${renderData?.icon || 'mdi:calendar-clock'}"></ha-icon>
-            <h2>${customTitle}</h2>
           </div>
         </div>
 
@@ -519,23 +519,28 @@ class HaCustomScheduleCard extends LitElement {
     }
 
     .card-header {
-      padding: 16px 20px;
+      padding: 16px 16px 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--custom-border);
-      background: rgba(0,0,0,0.1);
     }
 
-    .title-group {
+    .card-header .name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--secondary-text-color, #a0a0a0);
+      letter-spacing: 0.1px;
+    }
+
+    .header-right {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .title-group ha-icon {
+    .header-right ha-icon {
       color: var(--custom-primary);
-      --mdc-icon-size: 24px;
+      --mdc-icon-size: 20px;
     }
 
     h2 {
@@ -1549,13 +1554,13 @@ class HaCustomTimerCard extends LitElement {
     return html`
       <ha-card>
         <div class="card-header">
-          <div class="title-group">
+          <div class="name">${customTitle}</div>
+          <div class="header-right">
+            ${state !== 'idle' ? html`
+              <span class="state-badge ${state}">${state === 'active' ? this._t('start') : this._t('pausedMessage')}</span>
+            ` : ''}
             <ha-icon icon="${state === 'active' ? 'mdi:timer-sand' : 'mdi:timer'}"></ha-icon>
-            <h2>${customTitle}</h2>
           </div>
-          ${state !== 'idle' ? html`
-            <span class="state-badge ${state}">${state === 'active' ? this._t('start') : this._t('pausedMessage')}</span>
-          ` : ''}
         </div>
 
         <div class="card-content">
@@ -1663,31 +1668,29 @@ class HaCustomTimerCard extends LitElement {
     }
 
     .card-header {
+      padding: 16px 16px 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--custom-border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
     }
 
-    .title-group {
+    .card-header .name {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--secondary-text-color, #a0a0a0);
+      letter-spacing: 0.1px;
+    }
+
+    .header-right {
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
-    .title-group ha-icon {
+    .header-right ha-icon {
       color: var(--custom-primary);
-      --mdc-icon-size: 24px;
+      --mdc-icon-size: 20px;
       filter: drop-shadow(0 0 6px rgba(3, 169, 244, 0.4));
-    }
-
-    .title-group h2 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.3px;
     }
 
     .state-badge {
